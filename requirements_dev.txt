@@ -1,0 +1,5 @@
+pandas==1.0.5
+
+# requirements for testing
+pytest==6.0.2
+pytest-cov==2.10.1

@@ -1,0 +1,66 @@
+start: select -> final
+
+select: "SELECT"i select_clause "FROM"i from_clause [ "WHERE"i where_clause ]
+
+select_clause: [(column_expr ",")*] column_expr
+column_expr.0: expression [ [ "AS"i ] alias ] -> select_expression
+?expression: [name "."] name -> column_name
+              | literal
+
+from_clause: [(from_expr ",")*] from_expr
+?from_expr: from_item -> from_expression
+            | join -> join
+
+join: from_item "JOIN"i from_item [ "ON"i bool_expression ] -> join_expression
+from_item: name [ ["AS"i ] alias ] -> table_name
+
+alias: name -> alias_string
+
+where_clause: bool_expression
+
+bool_expression: bool_parentheses
+                 | bool_expression "AND"i bool_parentheses -> bool_and
+                 | bool_expression "OR"i bool_parentheses -> bool_or
+bool_parentheses: comparison_type
+                 | "(" bool_expression "AND"i comparison_type ")" -> bool_and
+                 | "(" bool_expression "OR"i comparison_type ")" -> bool_or
+
+comparison_type: equals | not_equals | greater_than | less_than | greater_than_or_equal
+| less_than_or_equal | in_expr | not_in_expr | is_null | is_not_null
+| contain_expr | contain_any_expr | like_expr | not_like_expr
+
+equals: expression "=" expression
+is_null: expression "is"i "null"i
+is_not_null: expression "is"i "not"i "null"i
+not_equals: expression ("<>" | "!=") expression
+greater_than: expression ">" expression
+less_than: expression "<" expression
+greater_than_or_equal: expression ">=" expression
+less_than_or_equal: expression "<=" expression
+in_expr: expression "IN"i "(" [expression ","]* expression ")"
+not_in_expr: expression "NOT"i "IN"i "(" [expression ","]* expression ")"
+contain_expr: expression "CONTAIN"i expression
+contain_any_expr: expression "ANY"i "CONTAIN"i "(" [expression ","]* expression ")"
+like_expr: expression "LIKE"i expression
+not_like_expr: expression "NOT"i "LIKE"i expression
+
+?literal: boolean -> bool
+       | number_expr -> number
+       | /'([^']|\s)+'|''/ -> string
+boolean: "true"i -> true
+       | "false"i -> false
+?number_expr: product
+
+?product: NUMBER
+
+integer: /[1-9][0-9]*/
+name: CNAME | ESCAPED_STRING | STAR
+STAR: "*"
+CNAME: ("_"|"/"|LETTER) ("_"|"/"|LETTER|DIGIT)*
+
+%import common.ESCAPED_STRING
+%import common.NUMBER
+%import common.LETTER
+%import common.DIGIT
+%import common.WS
+%ignore WS
