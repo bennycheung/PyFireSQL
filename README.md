@@ -16,46 +16,6 @@ cd PyFireSQL
 python setup.py install
 ```
 
-### FireSQL Parser
-The FireSQL parser, consists of two parts: the lexical scanner and the grammar rule module. Python parser generator [Lark](https://lark-parser.readthedocs.io/en/latest/) is used to provide the lexical scanner and grammar rule to parse the FireSQL statement. In the end, the parser execution generates the parse tree, aka. AST (Abstract Syntax Tree). The complexity of the FireSQL syntax requires an equally complex structure that efficiently stores the information needed for executing every possible FireSQL statement.
-
-For example, the AST parse tree for the FireSQL statement
-```
-SELECT id, date, email
-  FROM Bookings
-  WHERE date = '2022-04-04T00:00:00'
-```
-
-![sql_parse_tree](images/sql_parse_tree.png)
-
-This is delightful to use `lark` due to its design philosophy, which clearly separate the grammar specification from processing. The processing is applied to the parse tree by the Visitor or Transformer components.
-
-### Visitor and Transformer
-Transformers & Visitors provide a convenient interface to process the parse-trees that Lark returns. Lark document defines,
-
-* **Visitors** - visit each node of the tree, and run the appropriate method on it according to the node’s data. They work bottom-up, starting with the leaves and ending at the root of the tree.
-* **Transformers** -  work bottom-up (or depth-first), starting with visiting the leaves and working their way up until ending at the root of the tree.
-  * For each node visited, the transformer will call the appropriate method (callbacks), according to the node’s `data`, and use the returned value to replace the node, thereby creating a new tree structure.
-  * Transformers can be used to implement map & reduce patterns. Because nodes are reduced from leaf to root, at any point the callbacks may assume the children have already been transformed.
-
-> Using Visitor is simple at first, but you need to know exactly what you're fetching, the children chain can be difficult to navigate depending on the grammar which produce the parsed tree.
-
-We decided to use Transformer to transform the parse tree to the corresponding SQL component objects that can be easily consumed by the subsequent processing.
-
-For instance, the former example parse tree is transformed into SQL components as,
-
-```
-SQL_Select(
-  columns=[SQL_ColumnRef(table=None, column='id'),
-           SQL_ColumnRef(table=None, column='date'),
-           SQL_ColumnRef(table=None, column='email')],
-  froms=[SQL_SelectFrom(part='Bookings', alias=None)],
-  where=SQL_BinaryExpression(operator='==',
-                             left=SQL_ColumnRef(table=None, column='date'),
-                             right=SQL_ValueString(value='2022-04-04T00:00:00'))
-)
-```
-
 ## Just Enough SQL for FireSQL
 We don't need the full SQL parser and transformer. We can simply define ONLY the `SELECT` statement, just enough for Firestore collections query.
 
@@ -134,9 +94,8 @@ DATETIME_ISO_FORMAT = "%Y-%m-%dT%H:%M:%S"
 DATETIME_ISO_FORMAT_REGEX = r'^(-?(?:[1-9][0-9]*)?[0-9]{4})-(1[0-2]|0[1-9])-(3[01]|0[1-9]|[12][0-9])T(2[0-3]|[01][0-9]):([0-5][0-9]):([0-5][0-9])(\.[0-9]+)?(Z|[+-](?:2[0-3]|[01][0-9]):[0-5][0-9])?$'
 ```
 
-
 ## FireSQL to Firebase Query
-Finally, we derived a simple firebase SQL interface class that can be easily applied a SQL statement to fetch from Firebase collections.
+We provided a simple firebase SQL interface class that can be easily applied a SQL statement to fetch from Firebase collections.
 
 ### Programming Interface
 In PyFireSQL, we offer a simple programming interface to parse and execute firebase SQL.
@@ -277,6 +236,48 @@ After the Firebase query, the pattern matching is used as the filtering expressi
 - prefix match `pattern%`
 - suffix match `%pattern`
 - infix match `%pattern%`
+
+
+## FireSQL Parser Explained
+The FireSQL parser, consists of two parts: the lexical scanner and the grammar rule module. Python parser generator [Lark](https://lark-parser.readthedocs.io/en/latest/) is used to provide the lexical scanner and grammar rule to parse the FireSQL statement. In the end, the parser execution generates the parse tree, aka. AST (Abstract Syntax Tree). The complexity of the FireSQL syntax requires an equally complex structure that efficiently stores the information needed for executing every possible FireSQL statement.
+
+For example, the AST parse tree for the FireSQL statement
+```
+SELECT id, date, email
+  FROM Bookings
+  WHERE date = '2022-04-04T00:00:00'
+```
+
+![sql_parse_tree](images/sql_parse_tree.png)
+
+This is delightful to use `lark` due to its design philosophy, which clearly separate the grammar specification from processing. The processing is applied to the parse tree by the Visitor or Transformer components.
+
+### Visitor and Transformer
+Transformers & Visitors provide a convenient interface to process the parse-trees that Lark returns. Lark document defines,
+
+* **Visitors** - visit each node of the tree, and run the appropriate method on it according to the node’s data. They work bottom-up, starting with the leaves and ending at the root of the tree.
+* **Transformers** -  work bottom-up (or depth-first), starting with visiting the leaves and working their way up until ending at the root of the tree.
+  * For each node visited, the transformer will call the appropriate method (callbacks), according to the node’s `data`, and use the returned value to replace the node, thereby creating a new tree structure.
+  * Transformers can be used to implement map & reduce patterns. Because nodes are reduced from leaf to root, at any point the callbacks may assume the children have already been transformed.
+
+> Using Visitor is simple at first, but you need to know exactly what you're fetching, the children chain can be difficult to navigate depending on the grammar which produce the parsed tree.
+
+We decided to use Transformer to transform the parse tree to the corresponding SQL component objects that can be easily consumed by the subsequent processing.
+
+For instance, the former example parse tree is transformed into SQL components as,
+
+```
+SQL_Select(
+  columns=[SQL_ColumnRef(table=None, column='id'),
+           SQL_ColumnRef(table=None, column='date'),
+           SQL_ColumnRef(table=None, column='email')],
+  froms=[SQL_SelectFrom(part='Bookings', alias=None)],
+  where=SQL_BinaryExpression(operator='==',
+                             left=SQL_ColumnRef(table=None, column='date'),
+                             right=SQL_ValueString(value='2022-04-04T00:00:00'))
+)
+```
+
 
 ## References
 - Gabriele Tomassetti, [Parsing In Python: Tools And Libraries](https://tomassetti.me/parsing-in-python/)
