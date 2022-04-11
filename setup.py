@@ -1,12 +1,12 @@
 from setuptools import setup, find_packages
 
 setup(
-    name='firesql',
-    version='0.1.0',
-    description='Firebase backend client and computation tools.',
+    name='pyfiresql',
+    version='0.1.1',
+    description='Firestore SQL-like query tools.',
     author='Benny Cheung',
     author_email='btscheung@gmail.com',
-    url='https://bennycheung.github.io',
+    url='https://github.com/bennycheung/PyFireSQL',
     download_url='',
     license='MIT',
     packages=find_packages(exclude=['tests', 'images']),

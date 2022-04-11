@@ -3,6 +3,19 @@ PyFireSQL is a SQL-like programming interface to query [Cloud Firestore](https:/
 
 There is no formal query language to Cloud Firestore - NoSQL collection/document structure. For many instances, we need to use the cranky Firestore UI to navigate, scrolling and filtering through the endless records. With the UI, we have no way to extract the found documents. Even though we attempted to extract and update by writing a unique program for the specific task, we felt many scripts are almost the same that something must be done to limit the endless program writing. What if we can use SQL-like statements to perform the data extraction, which are both formal and reusable? - This idea will be the motivation of the FireSQL language!
 
+## How to install
+To install from PyPi,
+
+```
+pip install pyfiresql
+```
+
+To install from source,
+```
+cd PyFireSQL
+python setup.py install
+```
+
 ### FireSQL Parser
 The FireSQL parser, consists of two parts: the lexical scanner and the grammar rule module. Python parser generator [Lark](https://lark-parser.readthedocs.io/en/latest/) is used to provide the lexical scanner and grammar rule to parse the FireSQL statement. In the end, the parser execution generates the parse tree, aka. AST (Abstract Syntax Tree). The complexity of the FireSQL syntax requires an equally complex structure that efficiently stores the information needed for executing every possible FireSQL statement.
 
@@ -121,12 +134,6 @@ DATETIME_ISO_FORMAT = "%Y-%m-%dT%H:%M:%S"
 DATETIME_ISO_FORMAT_REGEX = r'^(-?(?:[1-9][0-9]*)?[0-9]{4})-(1[0-2]|0[1-9])-(3[01]|0[1-9]|[12][0-9])T(2[0-3]|[01][0-9]):([0-5][0-9]):([0-5][0-9])(\.[0-9]+)?(Z|[+-](?:2[0-3]|[01][0-9]):[0-5][0-9])?$'
 ```
 
-## How to install
-
-```
-cd PyFireSQL
-python setup.py install
-```
 
 ## FireSQL to Firebase Query
 Finally, we derived a simple firebase SQL interface class that can be easily applied a SQL statement to fetch from Firebase collections.
