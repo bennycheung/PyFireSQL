@@ -94,6 +94,25 @@ DATETIME_ISO_FORMAT = "%Y-%m-%dT%H:%M:%S"
 DATETIME_ISO_FORMAT_REGEX = r'^(-?(?:[1-9][0-9]*)?[0-9]{4})-(1[0-2]|0[1-9])-(3[01]|0[1-9]|[12][0-9])T(2[0-3]|[01][0-9]):([0-5][0-9]):([0-5][0-9])(\.[0-9]+)?(Z|[+-](?:2[0-3]|[01][0-9]):[0-5][0-9])?$'
 ```
 
+### Collection Path
+The Firestore collection has a set of documents. Each document can be nested with more collections. Firestore identifies a collection by a path, looks like `Companies/bennycorp/Users` means `Companies` collection has a document `bennycorp`, which has `Users` collection.
+
+If we want to query a nested collection, we can specify the collection name as a path. The paths can be long but we can use `AS` alias names.
+
+For example, the subcollection `Users` and `Bookings` are specified.
+
+```sql
+SELECT u.email, u.state, b.date, b.state
+  FROM
+    Companies/bennycorp/Users AS u JOIN Companies/bennycorp/Bookings AS b
+    ON u.email = b.email
+  WHERE 
+      u.state = 'ACTIVE' AND
+      u.email LIKE '%benny%' AND
+      b.state IN ('CHECKED_IN', 'CHECKED_OUT') AND
+      b.date >= '2022-03-18T04:00:00'
+```
+
 ## FireSQL to Firebase Query
 We provided a simple firebase SQL interface class that can be easily applied a SQL statement to fetch from Firebase collections.
 
@@ -129,7 +148,7 @@ else:
 
 For further post-processing, we can use Pandas's Dataframe to perform any data analysis, grouping, sorting and calculations. The list of docs (as Dict) can be directly imported into Dataframe! very convenience.
 
-```
+```python
 import pandas as pd
 
 df = pd.DataFrame(docs)
