@@ -19,7 +19,7 @@ python setup.py install
 ## Just Enough SQL for FireSQL
 We don't need the full SQL parser and transformer. We can simply define ONLY the `SELECT` statement, just enough for Firestore collections query.
 
-By using Lark's EBNF-like grammar, we have encoded the core `SELECT` clause, which can translate into Firestore collection queries.
+By using [Lark](https://lark-parser.readthedocs.io/en/latest/) EBNF-like grammar, we have encoded the core `SELECT` clause, which can translate into Firestore collection queries.
 - SELECT columns for collection field's projection
 - FROM sub-clause for collections
 - FROM/JOIN sub-clause for joining collections (restricted to 1 join)
@@ -84,8 +84,8 @@ SELECT u.email, u.state, b.date, b.state
 > See `firesql/sql/grammar/firesql.lark` for the FireSQL grammar specification.
 
 ### DateTime Type
-We are using [ISO-8601](https://en.wikipedia.org/wiki/ISO_8601) to express the date-time as string. Firestore stores the date-time as `Timstamp` data type at UTC.
-For example, if writting "March 18, 2022 at time 4 Hours at UTC" date-time string, it is "2022-03-18T04:00:00".
+We are using [ISO-8601](https://en.wikipedia.org/wiki/ISO_8601) to express the date-time as string. Firestore stores the date-time as `Timestamp` data type in UTC.
+For example, if writting "March 18, 2022 at time 4 Hours in UTC" date-time string, it is "2022-03-18T04:00:00".
 
 If in doubt, we are using the following to render and match the ISO-8601 date-time string.
 
