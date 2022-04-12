@@ -1,7 +1,9 @@
 # PyFireSQL
 PyFireSQL is a SQL-like programming interface to query [Cloud Firestore](https://firebase.google.com/products/firestore) collections using Python.
 
-There is no formal query language to Cloud Firestore - NoSQL collection/document structure. For many instances, we need to use the cranky Firestore UI to navigate, scrolling and filtering through the endless records. With the UI, we have no way to extract the found documents. Even though we attempted to extract and update by writing a unique program for the specific task, we felt many scripts are almost the same that something must be done to limit the endless program writing. What if we can use SQL-like statements to perform the data extraction, which are both formal and reusable? - This idea will be the motivation of the FireSQL language!
+There is no formal query language to Cloud Firestore - NoSQL collection/document structure. For many instances, we need to use the cranky Firestore UI to navigate, scroll and filter through the endless records. With the UI, we have no way to extract the found documents. Even though we attempted to extract and update by writing a unique program for the specific task, we felt many scripts are almost the same that something must be done to limit the endless program writing. What if we can use SQL-like statements to perform the data extraction, which is both formal and reusable? - This idea will be the motivation for the FireSQL language!
+
+> Read the companion article [FireSQL in Python](https://bennycheung.github.io/firesql-in-python) for more details.
 
 ## How to install
 To install from PyPi,
@@ -188,23 +190,17 @@ The default query result is rendered in "csv" output format.
 "0r6YWowe9rW65yB1qTKsCe83cCm2","btscheung+real@gmail.com","ACTIVE"
 "1utcUa9fdheOlrMe9GOCjrJ3wjh1","btscheung+bennycorp@gmail.com","ACTIVE"
 "7CUJOqe6rlOTQuatc27EQGivZfn2","btscheung+twotwo@gmail.com","ACTIVE"
-"7z1umMii01dGcSGYYJEHHrkx2Jp1","btscheung+o'mac*donald@gmail.com","ACTIVE"
-"bdGp8UJmWPPFy9qGfmzZm76JPML2","btscheung+jet@gmail.com","ACTIVE"
-"ccLmsxXcuJMrl04c3XS4e1tiV7X2","btscheung+threethree@gmail.com","ACTIVE"
-"xQDDc7SXpqXxRAxIQWb1xPqdGYw2","btscheung+hill6@gmail.com","ACTIVE"
+...
 ```
 
 Alternatively, by specifying the `-f json` output format, the result will be,
 
-```
+```json
 [
-{'docid': '0r6YWowe9rW65yB1qTKsCe83cCm2', 'email': 'btscheung+real@gmail.com', 'state': 'ACTIVE'},
-{'docid': '1utcUa9fdheOlrMe9GOCjrJ3wjh1', 'email': 'btscheung+bennycorp@gmail.com', 'state': 'ACTIVE'},
-{'docid': '7CUJOqe6rlOTQuatc27EQGivZfn2', 'email': 'btscheung+twotwo@gmail.com', 'state': 'ACTIVE'},
-{'docid': '7z1umMii01dGcSGYYJEHHrkx2Jp1', 'email': "btscheung+o'mac*donald@gmail.com", 'state': 'ACTIVE'},
-{'docid': 'bdGp8UJmWPPFy9qGfmzZm76JPML2', 'email': 'btscheung+jet@gmail.com', 'state': 'ACTIVE'},
-{'docid': 'ccLmsxXcuJMrl04c3XS4e1tiV7X2', 'email': 'btscheung+threethree@gmail.com', 'state': 'ACTIVE'},
-{'docid': 'xQDDc7SXpqXxRAxIQWb1xPqdGYw2', 'email': 'btscheung+hill6@gmail.com', 'state': 'ACTIVE'},
+  {"docid": "0r6YWowe9rW65yB1qTKsCe83cCm2", "email": "btscheung+real@gmail.com", "state": "ACTIVE"},
+  {"docid": "1utcUa9fdheOlrMe9GOCjrJ3wjh1", "email": "btscheung+bennycorp@gmail.com", "state": "ACTIVE"},
+  {"docid": "7CUJOqe6rlOTQuatc27EQGivZfn2", "email": "btscheung+twotwo@gmail.com", "state": "ACTIVE"},
+  ...
 ]
 ```
 #### SQL Input File
@@ -235,8 +231,8 @@ The result will be,
 "email","u_state","date","state"
 "btscheung+bennycorp@gmail.com","ACTIVE","2022-03-18T04:00:00","CHECKED_IN"
 "btscheung+bennycorp@gmail.com","ACTIVE","2022-03-18T04:00:00","CHECKED_IN"
-"btscheung+bennycorp@gmail.com","ACTIVE","2022-03-18T04:00:00","CHECKED_IN"
 "btscheung+hill6@gmail.com","ACTIVE","2022-03-31T04:00:00","CHECKED_IN"
+...
 ```
 
 ### Pattern Matching by LIKE
@@ -257,50 +253,8 @@ After the Firebase query, the pattern matching is used as the filtering expressi
 - infix match `%pattern%`
 
 
-## FireSQL Parser Explained
-The FireSQL parser, consists of two parts: the lexical scanner and the grammar rule module. Python parser generator [Lark](https://lark-parser.readthedocs.io/en/latest/) is used to provide the lexical scanner and grammar rule to parse the FireSQL statement. In the end, the parser execution generates the parse tree, aka. AST (Abstract Syntax Tree). The complexity of the FireSQL syntax requires an equally complex structure that efficiently stores the information needed for executing every possible FireSQL statement.
-
-For example, the AST parse tree for the FireSQL statement
-```
-SELECT id, date, email
-  FROM Bookings
-  WHERE date = '2022-04-04T00:00:00'
-```
-
-![sql_parse_tree](images/sql_parse_tree.png)
-
-This is delightful to use `lark` due to its design philosophy, which clearly separate the grammar specification from processing. The processing is applied to the parse tree by the Visitor or Transformer components.
-
-### Visitor and Transformer
-Transformers & Visitors provide a convenient interface to process the parse-trees that Lark returns. Lark document defines,
-
-* **Visitors** - visit each node of the tree, and run the appropriate method on it according to the node’s data. They work bottom-up, starting with the leaves and ending at the root of the tree.
-* **Transformers** -  work bottom-up (or depth-first), starting with visiting the leaves and working their way up until ending at the root of the tree.
-  * For each node visited, the transformer will call the appropriate method (callbacks), according to the node’s `data`, and use the returned value to replace the node, thereby creating a new tree structure.
-  * Transformers can be used to implement map & reduce patterns. Because nodes are reduced from leaf to root, at any point the callbacks may assume the children have already been transformed.
-
-> Using Visitor is simple at first, but you need to know exactly what you're fetching, the children chain can be difficult to navigate depending on the grammar which produce the parsed tree.
-
-We decided to use Transformer to transform the parse tree to the corresponding SQL component objects that can be easily consumed by the subsequent processing.
-
-For instance, the former example parse tree is transformed into SQL components as,
-
-```
-SQL_Select(
-  columns=[SQL_ColumnRef(table=None, column='id'),
-           SQL_ColumnRef(table=None, column='date'),
-           SQL_ColumnRef(table=None, column='email')],
-  froms=[SQL_SelectFrom(part='Bookings', alias=None)],
-  where=SQL_BinaryExpression(operator='==',
-                             left=SQL_ColumnRef(table=None, column='date'),
-                             right=SQL_ValueString(value='2022-04-04T00:00:00'))
-)
-```
-
-
 ## References
 - Gabriele Tomassetti, [Parsing In Python: Tools And Libraries](https://tomassetti.me/parsing-in-python/)
 - [Lark Documentation](https://lark-parser.readthedocs.io/en/latest/)
   - Repo: [lark-parser](https://github.com/lark-parser/lark)
-- SQL Parsing [sql_to_ibis](https://github.com/zbrookle/sql_to_ibis)
 
