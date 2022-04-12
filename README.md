@@ -1,25 +1,32 @@
 # PyFireSQL
 PyFireSQL is a SQL-like programming interface to query [Cloud Firestore](https://firebase.google.com/products/firestore) collections using Python.
 
-There is no formal query language to Cloud Firestore - NoSQL collection/document structure. For many instances, we need to use the cranky Firestore UI to navigate, scroll and filter through the endless records. With the UI, we have no way to extract the found documents. Even though we attempted to extract and update by writing a unique program for the specific task, we felt many scripts are almost the same that something must be done to limit the endless program writing. What if we can use SQL-like statements to perform the data extraction, which is both formal and reusable? - This idea will be the motivation for the FireSQL language!
+There is no formal query language to Cloud Firestore - NoSQL collection/document structure. For many instances, we need to use the useful but clunky Firestore UI to navigate, scroll and filter through the endless records. With the UI, we have no way to extract the found documents. Even though we attempted to extract and update by writing a unique program for the specific task, we felt many scripts are almost the same that something must be done to limit the endless program writing. What if we can use SQL-like statements to perform the data extraction, which is both formal and reusable? - This idea will be the motivation for the FireSQL language!
+
+Even though we see no relational data model of (table, row, column), we can easily see the equivalent between table -> collection,  row -> document and column -> field in the Firestore data model. The SQL-like statement can be transformed accordingly.
 
 > Read the companion article [FireSQL in Python](https://bennycheung.github.io/firesql-in-python) for more details.
 
 ## How to install
-To install from PyPi,
+To install PyFireSQL from PyPi,
 
 ```
 pip install pyfiresql
 ```
 
-To install from source,
-```
+To install from [PyFireSQL source](https://github.com/bennycheung/PyFireSQL), checkout the project
+```sh
 cd PyFireSQL
+# install require packages
+pip install -r requirements.txt
+# install (optional) development require packages
+pip install -r requirements_dev.txt
+
 python setup.py install
 ```
 
 ## Just Enough SQL for FireSQL
-We don't need the full SQL parser and transformer. We can simply define ONLY the `SELECT` statement, just enough for Firestore collections query.
+To get going, we don't need the full SQL parser and transformer for the DML (Data Manipulation Language). We define ONLY the `SELECT` statement, just enough for Firestore collections query to serve our immediate needs.
 
 By using [Lark](https://lark-parser.readthedocs.io/en/latest/) EBNF-like grammar, we have encoded the core `SELECT` clause, which can translate into Firestore collection queries.
 - SELECT columns for collection field's projection
@@ -40,8 +47,9 @@ But the processor has the following limitations:
 - No WINDOW sub-clause
 
 For example, the following statements can be expressed,
+> All keywords are case insensitive. All whitespaces are ignored by the parser.
 
-> docid is a special field name to extract the selected Document Id
+> `docid` is a special field name to extract the selected document's Id
 ```sql
   SELECT docid, email, state
     FROM
@@ -85,34 +93,39 @@ SELECT u.email, u.state, b.date, b.state
 
 > See `firesql/sql/grammar/firesql.lark` for the FireSQL grammar specification.
 
-### DateTime Type
-We are using [ISO-8601](https://en.wikipedia.org/wiki/ISO_8601) to express the date-time as string. Firestore stores the date-time as `Timestamp` data type in UTC.
-For example, if writting "March 18, 2022 at time 4 Hours in UTC" date-time string, it is "2022-03-18T04:00:00".
-
-If in doubt, we are using the following to render and match the ISO-8601 date-time string.
-
-```python
-DATETIME_ISO_FORMAT = "%Y-%m-%dT%H:%M:%S"
-DATETIME_ISO_FORMAT_REGEX = r'^(-?(?:[1-9][0-9]*)?[0-9]{4})-(1[0-2]|0[1-9])-(3[01]|0[1-9]|[12][0-9])T(2[0-3]|[01][0-9]):([0-5][0-9]):([0-5][0-9])(\.[0-9]+)?(Z|[+-](?:2[0-3]|[01][0-9]):[0-5][0-9])?$'
-```
-
 ### Collection Path
 The Firestore collection has a set of documents. Each document can be nested with more collections. Firestore identifies a collection by a path, looks like `Companies/bennycorp/Users` means `Companies` collection has a document `bennycorp`, which has `Users` collection.
 
-If we want to query a nested collection, we can specify the collection name as a path. The paths can be long but we can use `AS` alias names.
+If we want to query a nested collection, we can specify the collection name as a path.
+The paths can be long but we can use `AS` keyword to define their alias names.
 
-For example, the subcollection `Users` and `Bookings` are specified.
+For example, the subcollection `Users` and `Bookings` are specified with `Companies/bennycorp` document.
 
 ```sql
 SELECT u.email, u.state, b.date, b.state
   FROM
-    Companies/bennycorp/Users AS u JOIN Companies/bennycorp/Bookings AS b
+    Companies/bennycorp/Users as u JOIN Companies/bennycorp/Bookings as b
     ON u.email = b.email
   WHERE 
       u.state = 'ACTIVE' AND
-      u.email LIKE '%benny%' AND
-      b.state IN ('CHECKED_IN', 'CHECKED_OUT') AND
       b.date >= '2022-03-18T04:00:00'
+```
+
+> Interesting Firestore Fact: collection path must have odd number of parts.
+
+### DateTime Type
+Consistent description of date-time is a big topic the we made a practical design choice.
+We are using [ISO-8601](https://en.wikipedia.org/wiki/ISO_8601) to express the date-time as a string,
+while Firestore stores the date-time as `Timestamp` data type in UTC.
+For example,
+- writing "March 18, 2022, at time 4 Hours in UTC" date-time string, is "2022-03-18T04:00:00".
+- writing "March 18, 2022, at time 0 Hours in Toronto Time EDT (-4 hours)" date-time string, is "2022-03-18T00:00:00-04".
+
+If in doubt, we are using the following to convert, match and render to the ISO-8601 string for date-time values.
+
+```python
+DATETIME_ISO_FORMAT = "%Y-%m-%dT%H:%M:%S"
+DATETIME_ISO_FORMAT_REGEX = r'^(-?(?:[1-9][0-9]*)?[0-9]{4})-(1[0-2]|0[1-9])-(3[01]|0[1-9]|[12][0-9])T(2[0-3]|[01][0-9]):([0-5][0-9]):([0-5][0-9])(\.[0-9]+)?(Z|[+-](?:2[0-3]|[01][0-9]):[0-5][0-9])?$'
 ```
 
 ## FireSQL to Firebase Query
