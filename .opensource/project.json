@@ -1,0 +1,8 @@
+{
+  "name": "PyFireSQL",
+  "type": "library",
+  "platforms": ["Python", "Admin"],
+  "content": "README.md",
+  "pages": {},
+  "related": []
+}
