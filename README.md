@@ -5,7 +5,9 @@ There is no formal query language to Cloud Firestore - NoSQL collection/document
 
 Even though we see no relational data model of (table, row, column), we can easily see the equivalent between table -> collection,  row -> document and column -> field in the Firestore data model. The SQL-like statement can be transformed accordingly.
 
-> Read the companion article [FireSQL in Python](https://bennycheung.github.io/firesql-in-python) for more details.
+## Quick links
+- [Documentation @readthedocs](https://pyfiresql.readthedocs.io/)
+- [FireSQL in Python blog post](https://bennycheung.github.io/firesql-in-python)
 
 ## How to install
 To install PyFireSQL from PyPi,
