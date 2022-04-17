@@ -53,7 +53,8 @@ class DocPrinter:
           values.append(self.value_conversion(doc[field]))
         else:
           values.append('')
-      print(','.join([f'"{v}"' for v in values]))
+      valuesList = [f'"{v}"' if (isinstance(v, str) and v != '') else f'{v}' for v in values]
+      print(','.join( valuesList ))
 
   def printJSON(self, docs, selectFields):
     print("[")
