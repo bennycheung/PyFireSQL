@@ -7,3 +7,4 @@ SELECT u.email, u.state, b.date, b.state
       u.email LIKE '%benny%' AND
       b.state IN ('CHECKED_IN', 'CHECKED_OUT') AND
       b.date >= '2022-03-18T04:00:00'
+

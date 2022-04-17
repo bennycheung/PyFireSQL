@@ -15,6 +15,7 @@ from .sql_objects import (
 )
 from .sql_transformer import SelectTransformer
 from .sql_join import JoinPart, FireSQLJoin
+from .sql_aggregation import FireSQLAggregate
 
 from ..firebase.client import FirebaseClient
 
@@ -288,11 +289,12 @@ class SQLFireQuery():
     
   def select_fields(self) -> List:
     fields = []
-    if self._hasAggregation():
+    if FireSQLAggregate.hasAggregation(self.aggregationFields):
       for part in self.aggregationFields.keys():
         if self.aggregationFields[part]:
-          for aggfunc, column in self.aggregationFields[part]:
-            fields.append(aggfunc)
+          for func, column in self.aggregationFields[part]:
+            fieldName = FireSQLAggregate.fieldName(func, column)
+            fields.append(fieldName)
     else:
       # check if any field is ambiguous, rename it to become table_column
       for c in self.columns:
@@ -362,20 +364,9 @@ class SQLFireQuery():
 
     return docs
 
-  def _hasAggregation(self) -> bool:
-    for part in self.aggregationFields.keys():
-      if self.aggregationFields[part]:
-        return True
-    return False
-
   def aggregation(self, documents: Dict) -> List:
-    if self._hasAggregation():
-      adoc = {}
-      for part in self.aggregationFields.keys():
-        if self.aggregationFields[part]:
-          for aggfunc, column in self.aggregationFields[part]:
-            if aggfunc == 'count':
-              adoc['count'] = len(documents)
-      return [adoc]
+    if FireSQLAggregate.hasAggregation(self.aggregationFields):
+      fireAggregate = FireSQLAggregate()
+      return fireAggregate.aggregation(self.aggregationFields, documents)
     else:
       return documents
