@@ -3,6 +3,11 @@ import json
 import datetime
 
 class DocPrinter:
+  """
+  The DocPrinter class is for printing the select documents as CSV or JSON format output.
+
+  Console output in the specified format.
+  """
   DATETIME_ISO_FORMAT = "%Y-%m-%dT%H:%M:%S"
   DATETIME_ISO_FORMAT_REGEX = r'^(-?(?:[1-9][0-9]*)?[0-9]{4})-(1[0-2]|0[1-9])-(3[01]|0[1-9]|[12][0-9])T(2[0-3]|[01][0-9]):([0-5][0-9]):([0-5][0-9])(\.[0-9]+)?(Z|[+-](?:2[0-3]|[01][0-9]):[0-5][0-9])?$'
 
@@ -39,6 +44,16 @@ class DocPrinter:
       return value
 
   def printCSV(self, docs, selectFields):
+    """
+    printCSV is to print the given list of documents from the select fields in CSV output format
+
+    Args:
+      docs (List of documents as Dict): the list of documents after FireSQL select query
+      selectFields (List of fields to output): the list of select fields to be picked out from each document (as Dict)
+
+    Returns:
+      str: string output in CSV format
+    """
     if '*' in selectFields:
       # sample a doc for all the fields
       firstKey = next(iter(docs))
@@ -57,6 +72,16 @@ class DocPrinter:
       print(','.join( valuesList ))
 
   def printJSON(self, docs, selectFields):
+    """
+    printJSON is to print the given list of documents from the select fields in JSON output format
+
+    Args:
+      docs (List of documents as Dict): the list of documents after FireSQL select query
+      selectFields (List of fields to output): the list of select fields to be picked out from each document (as Dict)
+
+    Returns:
+      str: string output in JSON format
+    """
     print("[")
     if '*' in selectFields:
       for key, doc in docs.items():

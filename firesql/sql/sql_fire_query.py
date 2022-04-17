@@ -35,15 +35,39 @@ class SQLFireQuery:
 
 # main interface
 class FireSQL():
+  """
+  FireSQL is the main programming interface to execute FireSQL statements
+
+  During FireSQL initialization, the FireSQL parser is prepared from `sql/grammar/firesql.lark`.
+  """
 
   def __init__(self):
     self.transformer = SelectTransformer()
     self.parser = Lark(_GRAMMAR_TEXT, parser="lalr")
 
-  def select_fields(self):
+  def select_fields(self) -> List:
+    """
+    From the parsed FireSQL select statement, return the select fields.
+
+    Args:
+      None
+    Returns:
+      The list of select fields as strings
+    """
     return self.fireQuery.select_fields()
 
   def sql(self, client: FirebaseClient, sql: str, options: Dict = {}) -> List:
+    """
+    Given a Firebase connection, execute the FireSQL statement.
+
+    Args:
+      client (FirebaseClient): The client has established a Firebase connection
+      sql (str): FireSQL statement to be executed
+      options (Dist): Unused
+
+    Returns:
+      docs: A list of selected documents
+    """
     try:
       # select statement SQL parser to produce the AST
       ast = self.parser.parse(sql)

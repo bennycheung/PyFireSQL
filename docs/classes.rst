@@ -4,8 +4,6 @@ API Reference
 FireSQL
 -------
 
-.. autoclass:: firesql.sql.sql_fire_query
+.. automodule:: firesql.sql
     :members: 
 
-.. autoclass:: firesql.sql.doc_printer 
-    :members: 
