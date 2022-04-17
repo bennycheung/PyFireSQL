@@ -5,6 +5,7 @@ select: "SELECT"i select_clause "FROM"i from_clause [ "WHERE"i where_clause ]
 select_clause: [(column_expr ",")*] column_expr
 column_expr.0: expression [ [ "AS"i ] alias ] -> select_expression
 ?expression: [name "."] name -> column_name
+              | expression_math
               | literal
 
 from_clause: [(from_expr ",")*] from_expr
@@ -24,6 +25,9 @@ bool_expression: bool_parentheses
 bool_parentheses: comparison_type
                  | "(" bool_expression "AND"i comparison_type ")" -> bool_and
                  | "(" bool_expression "OR"i comparison_type ")" -> bool_or
+
+?expression_math: AGGREGATION expression ")" -> sql_aggregation
+AGGREGATION.8: ("sum("i | "avg("i | "min("i | "max("i | "count("i "distinct"i | "count("i)
 
 comparison_type: equals | not_equals | greater_than | less_than | greater_than_or_equal
 | less_than_or_equal | in_expr | not_in_expr | is_null | is_not_null
@@ -57,6 +61,7 @@ integer: /[1-9][0-9]*/
 name: CNAME | ESCAPED_STRING | STAR
 STAR: "*"
 CNAME: ("_"|"/"|LETTER) ("_"|"/"|LETTER|DIGIT)*
+
 
 %import common.ESCAPED_STRING
 %import common.NUMBER

@@ -33,6 +33,7 @@ class SQL_ColumnRef():
   type='column_ref'
   table: str
   column: str
+  func: str
 
 @dataclass
 class SQL_SelectFrom():

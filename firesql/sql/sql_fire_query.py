@@ -68,7 +68,10 @@ class FireSQL():
     # post-processing join of collections if needed
     selectDocs = self.fireQuery.post_process(filterDocuments)
 
-    return selectDocs
+    # aggregation docs if function existed
+    aggDocs = self.fireQuery.aggregation(selectDocs)
+
+    return aggDocs
 
 
 # internal firebase query
@@ -96,6 +99,7 @@ class SQLFireQuery():
     self.collections = {}
     self.aliases = {}
     self.collectionFields= {}
+    self.aggregationFields={}
     self.on = None
   
   def generate(self, select: SQL_Select, options: Dict = {}) -> Dict:
@@ -144,7 +148,13 @@ class SQLFireQuery():
 
       if partName not in self.collectionFields:
         self.collectionFields[partName] = []
+        self.aggregationFields[partName] = []
+
       self.collectionFields[partName].append(sel.column)
+
+      # if there is an aggregation function on column
+      if sel.func:
+        self.aggregationFields[partName].append( (sel.func, sel.column) )
 
   def _init_query_refs(self, query: SQL_BinaryExpression, fireQueries={}):
     if query:
@@ -253,12 +263,18 @@ class SQLFireQuery():
       return documents
     
   def select_fields(self) -> List:
-    # check if any field is ambiguous, rename it to become table_column
     fields = []
-    for c in self.columns:
-      if c.column != '*':
-        tableName = c.table if c.table else self.defaultPart
-        fields.append(self.columnNameMap[ self.aliases[tableName] ][ c.column ])
+    if self._hasAggregation():
+      for part in self.aggregationFields.keys():
+        if self.aggregationFields[part]:
+          for aggfunc, column in self.aggregationFields[part]:
+            fields.append(aggfunc)
+    else:
+      # check if any field is ambiguous, rename it to become table_column
+      for c in self.columns:
+        if c.column != '*':
+          tableName = c.table if c.table else self.defaultPart
+          fields.append(self.columnNameMap[ self.aliases[tableName] ][ c.column ])
     return fields
 
   def _handle_star_fields(self, tableName: str, fields: List, documents: Dict) -> List:
@@ -273,7 +289,7 @@ class SQLFireQuery():
         self.columnNameMap[ tableName ] = {}
       for key in sorted(fields):
         self.columnNameMap[ tableName ][key] = key
-        self.columns.append( SQL_ColumnRef(table=tableName, column=key ))
+        self.columns.append( SQL_ColumnRef(table=tableName, column=key, func=None ))
 
     return fields
 
@@ -294,10 +310,12 @@ class SQLFireQuery():
     if self.on:
       # there is join, unpack the join-on operator
       leftRef, operator, rightRef = self.on
+      leftPart, _ = leftRef
+      leftFields = self.collectionFields[leftPart]
+      isStar = True if '*' in leftFields else False
       # get left part
-      leftJoinPart = self._get_join_part(documents, leftRef)
+      leftJoinPart = self._get_join_part(documents, leftRef, isStar=isStar)
       # get right part
-      isStar = True if '*' in leftJoinPart.selectFields else False
       rightJoinPart = self._get_join_part(documents, rightRef, isStar=isStar)
 
       joinOp = FireSQLJoin()
@@ -319,3 +337,21 @@ class SQLFireQuery():
           docs.append(jdoc)
 
     return docs
+
+  def _hasAggregation(self) -> bool:
+    for part in self.aggregationFields.keys():
+      if self.aggregationFields[part]:
+        return True
+    return False
+
+  def aggregation(self, documents: Dict) -> List:
+    if self._hasAggregation():
+      adoc = {}
+      for part in self.aggregationFields.keys():
+        if self.aggregationFields[part]:
+          for aggfunc, column in self.aggregationFields[part]:
+            if aggfunc == 'count':
+              adoc['count'] = len(documents)
+      return [adoc]
+    else:
+      return documents

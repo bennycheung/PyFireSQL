@@ -14,6 +14,10 @@ class SelectTransformer(Transformer):
   def ESCAPED_STRING(self, args):
     return str(args).strip('"')
 
+  def AGGREGATION(self, args):
+    funcName = str(args).strip('(').lower()
+    return funcName
+
   def true(self, args):
     return True
 
@@ -40,7 +44,7 @@ class SelectTransformer(Transformer):
 
   def column_name(self, args):
     # (table_name, field_name)
-    sqlColumn = SQL_ColumnRef(table=args[0], column=args[1])
+    sqlColumn = SQL_ColumnRef(table=args[0], column=args[1], func=None)
     return sqlColumn
 
   def select_expression(self, args):
@@ -69,6 +73,11 @@ class SelectTransformer(Transformer):
 
   def from_clause(self, args):
     return args
+
+  def sql_aggregation(self, args):
+    column=args[1]
+    column.func = args[0]
+    return column
 
   def equals(self, args):
     sqlExpr = SQL_BinaryExpression(operator='==', left=args[0], right=args[1])
