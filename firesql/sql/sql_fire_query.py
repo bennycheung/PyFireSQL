@@ -11,8 +11,10 @@ from .sql_objects import (
   SQL_BinaryExpression,
   SQL_JoinExpression,
   SQL_ColumnRef,
+  SQL_SelectFrom,
 )
 from .sql_transformer import SelectTransformer
+from .sql_join import JoinPart, FireSQLJoin
 
 from ..firebase.client import FirebaseClient
 
@@ -275,43 +277,34 @@ class SQLFireQuery():
 
     return fields
 
-  def post_process(self, documents) -> List:
+  def _get_join_part(self, documents: Dict, partRef: SQL_SelectFrom, isStar: bool = False):
+    part, field = partRef
+    docs = documents[part]
+    if isStar:
+      fields = ['*']
+    else:
+      fields = self.collectionFields[part]
+    fields = self._handle_star_fields(part, fields, docs)
+    nameMap = self.columnNameMap[part]
+    return JoinPart(docs=docs, joinField=field, selectFields=fields, nameMap=nameMap)
+
+
+  def post_process(self, documents: Dict) -> List:
     docs = []
     if self.on:
-      # unpack the join-on operator
+      # there is join, unpack the join-on operator
       leftRef, operator, rightRef = self.on
+      # get left part
+      leftJoinPart = self._get_join_part(documents, leftRef)
+      # get right part
+      isStar = True if '*' in leftJoinPart.selectFields else False
+      rightJoinPart = self._get_join_part(documents, rightRef, isStar=isStar)
 
-      # handle left part
-      leftPart, leftField = leftRef
-      leftDocs = documents[leftPart]
-      leftFields = self.collectionFields[leftPart]
-      leftFields = self._handle_star_fields(leftPart, leftFields, leftDocs)
+      joinOp = FireSQLJoin()
+      docs = joinOp.inner_join(leftJoinPart, rightJoinPart)
 
-      # handle right part
-      rightPart, rightField = rightRef
-      rightDocs = documents[rightPart]
-      if rightPart in self.collectionFields:
-        rightFields = self.collectionFields[rightPart]
-      elif '*' in self.collectionFields[leftPart]:
-        rightFields = ['*']
-      rightFields = self._handle_star_fields(rightPart, rightFields, rightDocs)
-
-      for ldocId, ldoc in leftDocs.items():
-        for rdocId, rdoc in rightDocs.items():
-          if ldoc[leftField] == rdoc[rightField]:
-            jdoc = {}
-            for field in leftFields:
-              if field == 'docid':
-                jdoc['docid'] = ldocId
-              elif field in ldoc:
-                jdoc[ self.columnNameMap[leftPart][field] ] = ldoc[field]
-            for field in rightFields:
-              if field == 'docid':
-                jdoc['docid'] = rdocId
-              elif field in rdoc:
-                jdoc[ self.columnNameMap[rightPart][field] ] = rdoc[field]
-            docs.append(jdoc)
     else:
+      # there is no join
       if self.defaultPart in documents:
         targetDocs = documents[self.defaultPart]
         fields = self.collectionFields[self.defaultPart]
