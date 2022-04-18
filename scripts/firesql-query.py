@@ -18,9 +18,9 @@
 # import the necessary packages
 import argparse
 from firesql.firebase import FirebaseClient
-from firesql.sql.sql_fire_query import FireSQL
-from firesql.sql.doc_printer import DocPrinter
+
 from firesql.sql.sql_fire_client import FireSQLClient
+from firesql.sql import FireSQL, DocPrinter
 
 if __name__ == "__main__":
   # construct the argument parser and parse the arguments
@@ -49,12 +49,12 @@ if __name__ == "__main__":
     print("must specify query")
     exit(0)
 
-  firebaseClient = FirebaseClient()
-  firebaseClient.connect(credentials_json=credentials)
-  client = FireSQLClient(firebaseClient)
+  client = FirebaseClient()
+  client.connect(credentials_json=credentials)
+  sqlClient = FireSQLClient(client)
 
   fireSQL = FireSQL()
-  docs = fireSQL.sql(client, query)
+  docs = fireSQL.sql(sqlClient, query)
 
   if docs:
     docPrinter = DocPrinter()
