@@ -41,6 +41,9 @@ By using [Lark](https://lark-parser.readthedocs.io/en/latest/) EBNF-like grammar
   - array contains expressions: CONTAIN, ANY CONTAIN
   - filter expressions: LIKE, NOT LIKE
   - null expressions: IS NULL
+- Aggregation functions applied to the result set
+  - COUNT for any field
+  - SUM, AVG, MIN, MAX for numeric field
 - All keywords are case insensitive. All whitespaces are ignored.
 
 But the processor has the following limitations:
