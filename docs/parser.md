@@ -145,6 +145,7 @@ SELECT COUNT(*), MIN(b.cost), MAX(b.cost), SUM(b.cost), AVG(b.cost)
       u.state = 'ACTIVE' AND
       u.email LIKE '%benny%' AND
       b.state IN ('CHECKED_IN', 'CHECKED_OUT') AND
+```
       
 
 > See [firesql.lark](https://github.com/bennycheung/PyFireSQL/blob/main/firesql/sql/grammar/firesql.lark) for the FireSQL grammar specification.

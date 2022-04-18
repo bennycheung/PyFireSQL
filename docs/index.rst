@@ -25,7 +25,7 @@ Welcome to PyFireSQL's documentation!
 
 .. toctree::
    :maxdepth: 2
-   :caption: Reference
+   :caption: References
    :hidden:
 
    classes
