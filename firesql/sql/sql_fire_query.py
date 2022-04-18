@@ -18,7 +18,6 @@ from .sql_join import JoinPart, FireSQLJoin
 from .sql_aggregation import FireSQLAggregate
 
 from .sql_fire_client import FireSQLAbstractClient
-# from ..firebase.client import FirebaseClient
 
 
 _ROOT = Path(__file__).parent
