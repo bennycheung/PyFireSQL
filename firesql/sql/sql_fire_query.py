@@ -17,7 +17,8 @@ from .sql_transformer import SelectTransformer
 from .sql_join import JoinPart, FireSQLJoin
 from .sql_aggregation import FireSQLAggregate
 
-from ..firebase.client import FirebaseClient
+from .sql_fire_client import FireSQLAbstractClient
+# from ..firebase.client import FirebaseClient
 
 
 _ROOT = Path(__file__).parent
@@ -57,7 +58,7 @@ class FireSQL():
     """
     return self.fireQuery.select_fields()
 
-  def sql(self, client: FirebaseClient, sql: str, options: Dict = {}) -> List:
+  def sql(self, client: FireSQLAbstractClient, sql: str, options: Dict = {}) -> List:
     """
     Given a Firebase connection, execute the FireSQL statement.
 
@@ -249,18 +250,18 @@ class SQLFireQuery():
             filterQueries[part].append(query)
     return filterQueries
 
-  def execute(self, client: FirebaseClient, fireQueries: Dict) -> Dict:
+  def execute(self, client: FireSQLAbstractClient, fireQueries: Dict) -> Dict:
     documents = {}
     if fireQueries:
       for part in fireQueries.keys():
-        collectionRef = client.get_collection_ref(self.collections[part])
+        collectionName = self.collections[part]
         if fireQueries[part]:
-          documents[part] = client.query_document_by_where_tuples(collectionRef, fireQueries[part])
+          documents[part] = client.query_document_by_where_tuples(collectionName, fireQueries[part])
         else:
-          documents[part] = client.get_collection_documents(collectionRef)
+          documents[part] = client.get_collection_documents(collectionName)
     else:
-      collectionRef = client.get_collection_ref(self.collections[self.defaultPart])
-      documents[self.defaultPart] = client.get_collection_documents(collectionRef)
+      collectionName = self.collections[self.defaultPart]
+      documents[self.defaultPart] = client.get_collection_documents(collectionName)
     return documents
 
   def filter_documents(self, documents, filterQueries: Dict) -> Dict:
