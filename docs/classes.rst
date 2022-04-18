@@ -4,9 +4,9 @@ API Reference
 FireSQL
 -------
 
-.. automodule:: firesql.sql
-   :imported-members:
+.. automodule:: firesql.sql.sql_fire_query
    :members:
-   :undoc-members:
-   :show-inheritance:
+
+.. automodule:: firesql.sql.doc_printer
+   :members:
 
