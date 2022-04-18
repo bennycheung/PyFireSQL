@@ -5,5 +5,8 @@ FireSQL
 -------
 
 .. automodule:: firesql.sql
-    :members: 
+   :imported-members:
+   :members:
+   :undoc-members:
+   :show-inheritance:
 
