@@ -49,6 +49,32 @@ class DocPrinter:
     else:
       return value
 
+  def value_to_csv(self, value):
+    if isinstance(value, str):
+      return f'"{value}"'
+    elif isinstance(value, list):
+      convertList = []
+      for v in value:
+        if isinstance(v, str):
+          cv = f'{v}'
+        elif isinstance(v, list):
+          cv = self.value_to_csv(v)
+        elif isinstance(v, dict):
+          cv = self.value_to_csv(v)
+          # inside a list, remove the surronding quotes
+          cv = cv.strip('"')
+        else:
+          cv = v
+        convertList.append(cv)
+      joinValue = ','.join(convertList)
+      return f'"{joinValue}"'
+    elif isinstance(value, dict):
+      jsonValue = self.document_to_json(value)
+      escapedJsonValue = jsonValue.replace('"', '\\"')
+      return f'"{escapedJsonValue}"'
+    else:
+      return f"{value}"
+
   def printCSV(self, docs, selectFields):
     """
     printCSV is to print the given list of documents from the select fields in CSV output format
@@ -77,17 +103,7 @@ class DocPrinter:
 
       valuesList = []
       for value in values:
-        if isinstance(value, str):
-          valuesList.append(f'"{value}"')
-        elif isinstance(value, list):
-          joinValue = ','.join(value)
-          valuesList.append(f'"{joinValue}"')
-        elif isinstance(value, dict):
-          jsonValue = self.document_to_json(value)
-          escapedJsonValue = jsonValue.replace('"', '\\"')
-          valuesList.append(f'"{escapedJsonValue}"')
-        else:
-          valuesList.append(f"{value}")
+        valuesList.append( self.value_to_csv(value) )
       print(','.join( valuesList ))
 
   def printJSON(self, docs, selectFields):
