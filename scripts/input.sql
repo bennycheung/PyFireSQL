@@ -1,4 +1,4 @@
-SELECT u.email, u.state, b.date, b.state
+SELECT u.email, u.state, b.date, b.state, b.locationDate, b."visitor.email"
   FROM
     Companies/bennycorp/Users as u JOIN Companies/bennycorp/Bookings as b
     ON u.email = b.email

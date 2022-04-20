@@ -14,6 +14,19 @@ class FireSQLJoin():
   def __init__(self):
     pass
 
+  def _get_field_value(self, doc, field):
+    tokens = field.split('.')
+    if len(tokens) == 1:
+      return doc.get(field, '')
+    else:
+      # loop through the subfields to reach the lowest value
+      dd = doc
+      for f in tokens:
+        dd = dd.get(f, '')
+        if not dd:
+          break
+      return dd
+
   def join(self, leftJoinPart: JoinPart, rightJoinPart: JoinPart) -> List:
     docs = []
     for ldocId, ldoc in leftJoinPart.docs.items():
@@ -61,13 +74,13 @@ class FireSQLJoin():
           for field in loopPart.selectFields:
             if field == 'docid':
               jdoc['docid'] = ldocId
-            elif field in ldoc:
-              jdoc[ loopPart.nameMap[ field ] ] = ldoc[field]
+            else:
+              jdoc[ loopPart.nameMap[ field ] ] = self._get_field_value(ldoc, field)
           for field in lookupPart.selectFields:
             if field == 'docid':
               jdoc['docid'] = rdocId
-            elif field in rdoc:
-              jdoc[ lookupPart.nameMap[ field ] ] = rdoc[field]
+            else:
+              jdoc[ lookupPart.nameMap[ field ] ] = self._get_field_value(rdoc, field)
           docs.append(jdoc)
 
     return docs

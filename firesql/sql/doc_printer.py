@@ -25,6 +25,9 @@ class DocPrinter:
   def __init__(self):
     pass
 
+  def _get_field_value(self, doc, field):
+    return doc.get(field, '')
+
   def document_to_json(self, document):
     def _convert_datetime(o):
       if isinstance(o, datetime.datetime):
@@ -39,7 +42,10 @@ class DocPrinter:
     elif isinstance(value, list):
       return [self.value_conversion(v) for v in value]
     elif isinstance(value, dict):
-      return self.document_to_json(value)
+      dv = {}
+      for k, v in value.items():
+        dv[k] = self.value_conversion(v)
+      return dv
     else:
       return value
 
@@ -65,10 +71,23 @@ class DocPrinter:
       values = []
       for field in selectFields:
         if field in doc:
-          values.append(self.value_conversion(doc[field]))
+          values.append( self.value_conversion( self._get_field_value(doc, field) ) )
         else:
           values.append('')
-      valuesList = [f'"{v}"' if (isinstance(v, str) and v != '') else f'{v}' for v in values]
+
+      valuesList = []
+      for value in values:
+        if isinstance(value, str):
+          valuesList.append(f'"{value}"')
+        elif isinstance(value, list):
+          joinValue = ','.join(value)
+          valuesList.append(f'"{joinValue}"')
+        elif isinstance(value, dict):
+          jsonValue = self.document_to_json(value)
+          escapedJsonValue = jsonValue.replace('"', '\\"')
+          valuesList.append(f'"{escapedJsonValue}"')
+        else:
+          valuesList.append(f"{value}")
       print(','.join( valuesList ))
 
   def printJSON(self, docs, selectFields):
@@ -85,14 +104,15 @@ class DocPrinter:
     print("[")
     if '*' in selectFields:
       for key, doc in docs.items():
-        print('{},'.format(self.document_to_json(doc)))
+        fields = self.value_conversion(doc)
+      print('{},'.format( self.document_to_json(fields) ))
     else:
       for doc in docs:
         fields = {}
         for field in selectFields:
           if field in doc:
-            fields[field] = self.value_conversion(doc[field])
+            fields[field] = self.value_conversion( self._get_field_value(doc, field) )
           else:
             fields[field] = ''
-        print('{},'.format(fields))
+        print('{},'.format( self.document_to_json(fields) ))
     print("]")
