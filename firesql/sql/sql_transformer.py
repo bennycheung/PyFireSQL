@@ -92,7 +92,9 @@ class SelectTransformer(Transformer):
     return sqlExpr
 
   def is_not_null(self, args):
-    sqlExpr = SQL_BinaryExpression(operator='!=', left=args[0], right=None)
+    # since Firestore query does not allow != operator on null value,
+    # we need to compare against empty string
+    sqlExpr = SQL_BinaryExpression(operator='!=', left=args[0], right=SQL_ValueString(value=''))
     return sqlExpr
 
   def greater_than(self, args):
