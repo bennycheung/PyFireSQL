@@ -319,6 +319,19 @@ class SQLFireQuery():
 
     return fields
 
+  def _get_field_value(self, doc, field):
+    tokens = field.split('.')
+    if len(tokens) == 1:
+      return doc.get(field, '')
+    else:
+      # loop through the subfields to reach the lowest value
+      dd = doc
+      for f in tokens:
+        dd = dd.get(f, '')
+        if not dd:
+          break
+      return dd
+
   def _get_join_part(self, documents: Dict, partRef: SQL_SelectFrom, isStar: bool = False):
     part, field = partRef
     docs = documents[part]
@@ -329,7 +342,6 @@ class SQLFireQuery():
     fields = self._handle_star_fields(part, fields, docs)
     nameMap = self.columnNameMap[part]
     return JoinPart(docs=docs, joinField=field, selectFields=fields, nameMap=nameMap)
-
 
   def post_process(self, documents: Dict) -> List:
     docs = []
@@ -358,8 +370,8 @@ class SQLFireQuery():
           for field in fields:
             if field == 'docid':
               jdoc['docid'] = docId
-            elif field in doc:
-              jdoc[ self.columnNameMap[self.defaultPart][field] ] = doc[field]
+            else:
+              jdoc[ self.columnNameMap[self.defaultPart][field] ] = self._get_field_value(doc, field)
           docs.append(jdoc)
 
     return docs
