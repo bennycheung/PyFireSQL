@@ -305,17 +305,21 @@ class SQLFireQuery():
 
   def _handle_star_fields(self, tableName: str, fields: List, documents: Dict) -> List:
     if '*' in fields:
-      # find all the fields from a sample document
-      firstDocKey = next(iter(documents))
-      doc = documents[firstDocKey]
-      fields = doc.keys()
+      if documents:
+        # find all the fields from a sample document
+        firstDocKey = next(iter(documents))
+        doc = documents[firstDocKey]
+        # integrate all document fields into the field list
+        for field in doc.keys():
+          if field not in fields:
+            fields.append(field)
 
-      # update the columns and column name map for the table
-      if tableName not in self.columnNameMap:
-        self.columnNameMap[ tableName ] = {}
-      for key in sorted(fields):
-        self.columnNameMap[ tableName ][key] = key
-        self.columns.append( SQL_ColumnRef(table=tableName, column=key, func=None ))
+        # update the columns and column name map for the table
+        if tableName not in self.columnNameMap:
+          self.columnNameMap[ tableName ] = {}
+        for key in sorted(fields):
+          self.columnNameMap[ tableName ][key] = key
+          self.columns.append( SQL_ColumnRef(table=tableName, column=key, func=None ))
 
     return fields
 
