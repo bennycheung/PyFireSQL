@@ -170,6 +170,46 @@ SELECT u.email, u.state, b.date, b.state
 
 > Interesting Firestore Fact: collection path must have odd number of parts.
 
+### Document Field and Sub-field
+Since Firestore document field can have nested sub-field, FireSQL statement column reference can reach the document sub-fields by quoted string, using the `"` to escape the field name with `.` in it. The quoted string can be used anywhere that a column reference is allowed.
+
+For example, the `Users` document's `location` field, which has a sub-field `displayName`. The sub-field can be reached by `"location.displayName"`
+
+```sql
+  SELECT email, "location.displayName"
+  FROM Users
+  WHERE "location.displayName" = 'Work From Home'
+```
+
+### Document ID
+Firestore has a unique "document ID" that associated with each document. The document ID is not part of the document fields that we need to provide special handling to access. FireSQL introduced a special field `docid` to let any statement to reference to the unique "document ID".
+
+For example, we can select where the document equals to a specific `docid` in the `Users` collection. Even though the document does not have `docid` field, we can also project the `docid` value in the output.
+
+```sql
+  SELECT docid, email
+  FROM Users
+  WHERE docid = '4LLlLw6tZicB40HrjhDJNmvaTYw1'
+```
+
+Due to Firestore admin API limitations, we can ONLY express `=` equal or `IN` operators with `docid`.
+For example, the following statement will find documents that in the specified array of `docid`.
+
+```sql
+  SELECT docid, email
+  FROM Users
+  WHERE docid IN ('4LLlLw6tZicB40HrjhDJNmvaTYw1', '74uWntZuVPeYcLVcoS0pFApGPdr2')
+```
+
+More interesting, if we want to project all the fields, including the `docid`. We can do the select statement like,
+`docid` and `*` are projected in the output.
+
+```sql
+  SELECT docid, *
+  FROM Users
+  WHERE "location.displayName" = 'Work From Home'
+```
+
 ### DateTime Type
 Consistent description of date-time is a big topic that we made a practical design choice.
 We are using [ISO-8601](https://en.wikipedia.org/wiki/ISO_8601) to express the date-time as a string,
