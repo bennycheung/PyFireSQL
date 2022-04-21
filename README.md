@@ -270,6 +270,15 @@ After the Firebase query, the pattern matching is used as the filtering expressi
 - suffix match `%pattern`
 - infix match `%pattern%`
 
+## Release
+Create a source distribution and upload to PyPi
+
+```
+rm -rf dist
+rm -rf build
+python setup.py sdist
+twine upload dist/*
+```
 
 ## References
 - Gabriele Tomassetti, [Parsing In Python: Tools And Libraries](https://tomassetti.me/parsing-in-python/)
