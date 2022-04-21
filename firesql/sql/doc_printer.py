@@ -118,26 +118,23 @@ class DocPrinter:
       str: string output in JSON format
     """
     print("[")
-    start = True
+    count = 0
+    total = len(docs)
     if '*' in selectFields:
       for key, doc in docs.items():
+        count += 1
         fields = self.value_conversion(doc)
-        if start:
-          print('{}'.format( self.document_to_json(fields) ))
-          start = False
-        else:
-          print(',{}'.format( self.document_to_json(fields) ))
+        comma = ',' if count < total else ''
+        print('{}{}'.format( self.document_to_json(fields), comma ))
     else:
       for doc in docs:
+        count += 1
         fields = {}
         for field in selectFields:
           if field in doc:
             fields[field] = self.value_conversion( self._get_field_value(doc, field) )
           else:
             fields[field] = ''
-        if start:
-          print('{}'.format( self.document_to_json(fields) ))
-          start = False
-        else:
-          print(',{}'.format( self.document_to_json(fields) ))
+        comma = ',' if count < total else ''
+        print('{}{}'.format( self.document_to_json(fields), comma ))
     print("]")
