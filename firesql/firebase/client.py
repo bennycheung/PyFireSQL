@@ -195,11 +195,28 @@ class FirebaseClient:
 
   def query_document_by_where_tuples(self, collection_ref, whereTuples):
     # whereTuples is [(key, operator, value), ...]
+    # if key is 'docid', do special document id processing
+    results = {}
+    for whereTuple in whereTuples:
+      (key, operator, value) = whereTuple
+      if key == 'docid':
+        if operator == '==':
+          doc = self.get_document(collection_ref, value)
+          if doc:
+            results[value] = doc
+        elif operator == 'in':
+          if isinstance(value, list):
+            for v in value:
+              doc = self.get_document(collection_ref, v)
+              if doc:
+                results[v] = doc
+        return results
+
+    # otherwise, preform the where queries
     query_ref = collection_ref
     for whereTuple in whereTuples:
       (key, operator, value) = whereTuple
       query_ref = query_ref.where(key, operator, value)
-    results = {}
     for doc in query_ref.stream():
       results[doc.id] = doc.to_dict()
     return results

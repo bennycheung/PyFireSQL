@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Any, List
+from typing import Any, List, Dict
 
 
 class FireSQLAbstractClient(ABC):
@@ -20,11 +20,15 @@ class FireSQLAbstractClient(ABC):
     pass
 
   @abstractmethod
-  def query_document_by_where_tuples(self, collectionName: str, queries: List):
+  def query_document_by_where_tuples(self, collectionName: str, queries: List) -> Dict:
     pass
 
   @abstractmethod
-  def get_collection_documents(self, collectionName: str):
+  def get_collection_document(self, collectionName: str, docId: str) -> Dict:
+    pass
+
+  @abstractmethod
+  def get_collection_documents(self, collectionName: str) -> Dict:
     pass
 
 
@@ -45,11 +49,15 @@ class FireSQLClient(FireSQLAbstractClient):
   def get_collection_ref(self, collectionName: str): 
     return self.client.get_collection_ref(collectionName)
 
-  def query_document_by_where_tuples(self, collectionName: str, queries: List):
+  def query_document_by_where_tuples(self, collectionName: str, queries: List) -> Dict:
     collectionRef = self.get_collection_ref(collectionName)
     return self.client.query_document_by_where_tuples(collectionRef, queries)
   
-  def get_collection_documents(self, collectionName: str):
+  def get_collection_document(self, collectionName: str, docId: str) -> Dict:
+    collectionRef = self.get_collection_ref(collectionName)
+    return self.client.get_document(collectionRef)
+
+  def get_collection_documents(self, collectionName: str) -> Dict:
     collectionRef = self.get_collection_ref(collectionName)
     return self.client.get_collection_documents(collectionRef)
 
