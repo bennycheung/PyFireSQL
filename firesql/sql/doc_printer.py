@@ -118,10 +118,15 @@ class DocPrinter:
       str: string output in JSON format
     """
     print("[")
+    start = True
     if '*' in selectFields:
       for key, doc in docs.items():
         fields = self.value_conversion(doc)
-      print('{},'.format( self.document_to_json(fields) ))
+        if start:
+          print('{}'.format( self.document_to_json(fields) ))
+          start = False
+        else:
+          print(',{}'.format( self.document_to_json(fields) ))
     else:
       for doc in docs:
         fields = {}
@@ -130,5 +135,9 @@ class DocPrinter:
             fields[field] = self.value_conversion( self._get_field_value(doc, field) )
           else:
             fields[field] = ''
-        print('{},'.format( self.document_to_json(fields) ))
+        if start:
+          print('{}'.format( self.document_to_json(fields) ))
+          start = False
+        else:
+          print(',{}'.format( self.document_to_json(fields) ))
     print("]")

@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='pyfiresql',
-    version='0.1.6',
+    version='0.1.7',
     description='Firestore SQL-like query tools.',
     author='Benny Cheung',
     author_email='btscheung@gmail.com',
