@@ -37,6 +37,12 @@ class SQLFireInsert():
       return False
 
     return True
+
+  def select_fields(self) -> List:
+    fields = ['docid']
+    for field in self.columns:
+      fields.append(field)
+    return fields
   
   def build(self) -> Dict:
     doc = {}

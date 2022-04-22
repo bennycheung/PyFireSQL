@@ -51,7 +51,7 @@ class FireSQL():
     Returns:
       The list of select fields as strings
     """
-    return self.fireQuery.select_fields()
+    return self.sqlFireCommand.select_fields()
 
   def sql(self, client: FireSQLAbstractClient, sql: str, options: Dict = {}) -> List:
     """
@@ -111,7 +111,7 @@ class FireSQL():
       self.sqlFireCommand = SQLFireUpdate()
 
       # transform parsed SQL components into firebase queries
-      queries = self.sqlFireCommand.update_generate(sqlCommand, options=options)
+      queries = self.sqlFireCommand.generate(sqlCommand, options=options)
       fireQueries = self.sqlFireCommand.firebase_queries(queries)
       filterQueries = self.sqlFireCommand.filter_queries(queries)
 
@@ -129,7 +129,7 @@ class FireSQL():
       self.sqlFireCommand = SQLFireDelete()
 
       # transform parsed SQL components into firebase queries
-      queries = self.sqlFireCommand.delete_generate(sqlCommand, options=options)
+      queries = self.sqlFireCommand.generate(sqlCommand, options=options)
       fireQueries = self.sqlFireCommand.firebase_queries(queries)
       filterQueries = self.sqlFireCommand.filter_queries(queries)
 
