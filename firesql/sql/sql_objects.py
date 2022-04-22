@@ -77,3 +77,10 @@ class SQL_Update():
   table: SQL_SelectFrom
   sets: List[SQL_BinaryExpression]
   where: SQL_BinaryExpression
+
+@dataclass
+class SQL_Insert():
+  type='insert'
+  table: SQL_SelectFrom
+  columns: List[SQL_ColumnRef]
+  values: SQL_ValueList

@@ -1,5 +1,4 @@
 import datetime
-import re
 from typing import Dict, List
 
 from .sql_objects import (
@@ -12,24 +11,12 @@ from .sql_objects import (
 from .sql_join import JoinPart, FireSQLJoin
 from .sql_aggregation import FireSQLAggregate
 
+from .sql_date import SQLDate
 from .sql_fire_client import FireSQLAbstractClient
 
 
 # internal firebase query
 class SQLFireQuery():
-  DATETIME_ISO_FORMAT = "%Y-%m-%dT%H:%M:%S"
-  DATETIME_ISO_FORMAT_REGEX = r'^(-?(?:[1-9][0-9]*)?[0-9]{4})-(1[0-2]|0[1-9])-(3[01]|0[1-9]|[12][0-9])T(2[0-3]|[01][0-9]):([0-5][0-9]):([0-5][0-9])(\.[0-9]+)?(Z|[+-](?:2[0-3]|[01][0-9]):[0-5][0-9])?$'
-
-  match_iso8601 = re.compile(DATETIME_ISO_FORMAT_REGEX).match
-
-  @classmethod
-  def validate_iso8601(cls, str_val):
-      try:            
-          if SQLFireQuery.match_iso8601( str_val ) is not None:
-              return True
-      except:
-          pass
-      return False
 
   def __init__(self):
     self.clear()
@@ -116,7 +103,7 @@ class SQLFireQuery():
             value = rightRef.value
           else:
             value = None
-          if isinstance(value, str) and SQLFireQuery.validate_iso8601(value):
+          if isinstance(value, str) and SQLDate.validate_iso8601(value):
             value = datetime.datetime.fromisoformat(value)
           fireQuery = [leftRef.column, query.operator, value]
 

@@ -6,6 +6,7 @@ from lark import Lark
 
 from .sql_objects import (
   SQL_Select,
+  SQL_Insert,
   SQL_Update,
 )
 from .sql_transformer import SelectTransformer
@@ -13,6 +14,7 @@ from .sql_transformer import SelectTransformer
 from .sql_fire_client import FireSQLAbstractClient
 from .sql_fire_query import SQLFireQuery
 from .sql_fire_update import SQLFireUpdate
+from .sql_fire_insert import SQLFireInsert
 
 
 _ROOT = Path(__file__).parent
@@ -72,41 +74,51 @@ class FireSQL():
 
 
     if isinstance(sqlCommand, SQL_Select):
-      self.fireQuery = SQLFireQuery()
+      self.sqlFireCommand = SQLFireQuery()
 
       # transform parsed SQL components into firebase queries
-      queries = self.fireQuery.generate(sqlCommand, options=options)
-      fireQueries = self.fireQuery.firebase_queries(queries)
-      filterQueries = self.fireQuery.filter_queries(queries)
+      queries = self.sqlFireCommand.generate(sqlCommand, options=options)
+      fireQueries = self.sqlFireCommand.firebase_queries(queries)
+      filterQueries = self.sqlFireCommand.filter_queries(queries)
 
       # execute firebase queries for each collection
-      documents = self.fireQuery.execute(client, fireQueries)
+      documents = self.sqlFireCommand.execute(client, fireQueries)
 
       # execute filter queries for each collection
-      filterDocuments = self.fireQuery.filter_documents(documents, filterQueries)
+      filterDocuments = self.sqlFireCommand.filter_documents(documents, filterQueries)
 
       # post-processing join of collections if needed
-      selectDocs = self.fireQuery.post_process(filterDocuments)
+      selectDocs = self.sqlFireCommand.post_process(filterDocuments)
 
       # aggregation docs if function existed
-      aggDocs = self.fireQuery.aggregation(selectDocs)
+      aggDocs = self.sqlFireCommand.aggregation(selectDocs)
 
       return aggDocs
 
+    elif isinstance(sqlCommand, SQL_Insert):
+      self.sqlFireCommand = SQLFireInsert()
+
+      if self.sqlFireCommand.generate(sqlCommand, options=options):
+        document = self.sqlFireCommmand.build()
+        insertedDoc = self.sqlFireCommand.execute(client, document)
+        return [insertedDoc]
+      else:
+        return []
+
     elif isinstance(sqlCommand, SQL_Update):
-      self.fireQuery = SQLFireUpdate()
+      self.sqlFireCommand = SQLFireUpdate()
 
       # transform parsed SQL components into firebase queries
-      queries = self.fireQuery.update_generate(sqlCommand, options=options)
-      fireQueries = self.fireQuery.firebase_queries(queries)
-      filterQueries = self.fireQuery.filter_queries(queries)
+      queries = self.sqlFireCommand.update_generate(sqlCommand, options=options)
+      fireQueries = self.sqlFireCommand.firebase_queries(queries)
+      filterQueries = self.sqlFireCommand.filter_queries(queries)
 
       # execute firebase queries for each collection
-      documents = self.fireQuery.execute(client, fireQueries)
+      documents = self.sqlFireCommand.execute(client, fireQueries)
 
       # execute filter queries for each collection
-      filterDocuments = self.fireQuery.filter_documents(documents, filterQueries)
+      filterDocuments = self.sqlFireCommand.filter_documents(documents, filterQueries)
 
       # post-processing update of collections if needed
-      updateDocs = self.fireQuery.update_execute(client, filterDocuments)
+      updateDocs = self.sqlFireCommand.update_execute(client, filterDocuments)
       return updateDocs 

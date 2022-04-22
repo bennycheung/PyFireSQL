@@ -180,3 +180,20 @@ class SelectTransformer(Transformer):
 
   def set_item(self, args):
     return args[0]
+
+  # insert statement
+  def insert(self, args):
+    sqlInsert = SQL_Insert(table=args[0], columns=args[1], values=args[2])
+    return sqlInsert
+
+  def columns_clause(self, args):
+    return args[0:]
+  
+  def column_spec(self, args):
+    return args[0]
+
+  def values_clause(self, args):
+    return args[0:]
+
+  def value_spce(self, args):
+    return args[0]

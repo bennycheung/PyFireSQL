@@ -1,5 +1,6 @@
 start: select -> final
        | update -> final
+       | insert -> final
 
 select: "SELECT"i select_clause "FROM"i from_clause [ "WHERE"i where_clause ]
 
@@ -26,6 +27,14 @@ set_clause: [(set_expr ",")*] set_expr
 ?set_expr: set_item -> set_expression
 
 set_item: equals
+
+insert: "INSERT"i "INTO"i from_item "(" columns_clause ")" "VALUES"i "(" values_clause ")"
+
+columns_clause: [(column_spec ",")*] column_spec
+?column_spec: [name "."] name -> column_name
+
+values_clause: [(value_spec ",")*] value_spec
+?value_spec: literal
 
 bool_expression: bool_parentheses
                  | bool_expression "AND"i bool_parentheses -> bool_and
