@@ -163,3 +163,20 @@ class SelectTransformer(Transformer):
   
   def final(self, args):
     return args[0]
+
+  # update statement
+  def update(self, args):
+    sqlUpdate = SQL_Update(table=args[0], sets=args[1], where=args[2])
+    return sqlUpdate
+
+  def set_clause(self, args):
+    return args[0:]
+
+  def set_expr(self, args):
+    return args[0]
+
+  def set_expression(self, args):
+    return args[0]
+
+  def set_item(self, args):
+    return args[0]

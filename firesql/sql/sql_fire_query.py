@@ -12,6 +12,7 @@ from .sql_objects import (
   SQL_JoinExpression,
   SQL_ColumnRef,
   SQL_SelectFrom,
+  SQL_Update,
 )
 from .sql_transformer import SelectTransformer
 from .sql_join import JoinPart, FireSQLJoin
@@ -73,30 +74,51 @@ class FireSQL():
       # select statement SQL parser to produce the AST
       ast = self.parser.parse(sql)
       # transform AST into parsed SQL components
-      selectQuery = self.transformer.transform(ast)
+      sqlCommand = self.transformer.transform(ast)
     except Exception as e:
       print('Parseing Error: {}'.format(e))
       return []
 
-    self.fireQuery = SQLFireQuery()
-    # transform parsed SQL components into firebase queries
-    queries = self.fireQuery.generate(selectQuery, options=options)
-    fireQueries = self.fireQuery.firebase_queries(queries)
-    filterQueries = self.fireQuery.filter_queries(queries)
 
-    # execute firebase queries for each collection
-    documents = self.fireQuery.execute(client, fireQueries)
+    if isinstance(sqlCommand, SQL_Select):
+      self.fireQuery = SQLFireQuery()
 
-    # execute filter queries for each collection
-    filterDocuments = self.fireQuery.filter_documents(documents, filterQueries)
+      # transform parsed SQL components into firebase queries
+      queries = self.fireQuery.generate(sqlCommand, options=options)
+      fireQueries = self.fireQuery.firebase_queries(queries)
+      filterQueries = self.fireQuery.filter_queries(queries)
 
-    # post-processing join of collections if needed
-    selectDocs = self.fireQuery.post_process(filterDocuments)
+      # execute firebase queries for each collection
+      documents = self.fireQuery.execute(client, fireQueries)
 
-    # aggregation docs if function existed
-    aggDocs = self.fireQuery.aggregation(selectDocs)
+      # execute filter queries for each collection
+      filterDocuments = self.fireQuery.filter_documents(documents, filterQueries)
 
-    return aggDocs
+      # post-processing join of collections if needed
+      selectDocs = self.fireQuery.post_process(filterDocuments)
+
+      # aggregation docs if function existed
+      aggDocs = self.fireQuery.aggregation(selectDocs)
+
+      return aggDocs
+
+    elif isinstance(sqlCommand, SQL_Update):
+      self.fireQuery = SQLFireUpdate()
+
+      # transform parsed SQL components into firebase queries
+      queries = self.fireQuery.update_generate(sqlCommand, options=options)
+      fireQueries = self.fireQuery.firebase_queries(queries)
+      filterQueries = self.fireQuery.filter_queries(queries)
+
+      # execute firebase queries for each collection
+      documents = self.fireQuery.execute(client, fireQueries)
+
+      # execute filter queries for each collection
+      filterDocuments = self.fireQuery.filter_documents(documents, filterQueries)
+
+      # post-processing update of collections if needed
+      updateDocs = self.fireQuery.update_execute(client, filterDocuments)
+      return updateDocs 
 
 
 # internal firebase query
@@ -126,7 +148,7 @@ class SQLFireQuery():
     self.collectionFields= {}
     self.aggregationFields={}
     self.on = None
-  
+
   def generate(self, select: SQL_Select, options: Dict = {}) -> Dict:
     self._init_collection_refs(select, options)
     self._init_field_refs(select, options)
@@ -310,9 +332,15 @@ class SQLFireQuery():
         firstDocKey = next(iter(documents))
         doc = documents[firstDocKey]
         # integrate all document fields into the field list
+        # but skip the '*' field
+        jfields = []
+        for field in fields:
+          if field != '*':
+            jfields.append(field)
         for field in doc.keys():
           if field not in fields:
-            fields.append(field)
+            jfields.append(field)
+        fields = jfields
 
         # update the columns and column name map for the table
         if tableName not in self.columnNameMap:
@@ -386,3 +414,86 @@ class SQLFireQuery():
       return fireAggregate.aggregation(self.aggregationFields, documents)
     else:
       return documents
+
+
+class SQLFireUpdate(SQLFireQuery):
+
+  def __init__(self):
+    super(SQLFireUpdate, self).__init__()
+    self.sets = {}
+
+  def update_generate(self, update: SQL_Update, options: Dict = {}) -> Dict:
+    self._init_update_collection_refs(update, options)
+    self._init_update_sets(update)
+
+    # create queries for each collections (parts)
+    # return a dicitionary of {part -> [queries]}
+    self.fireQueries = {}
+    self._init_query_refs(update.where, fireQueries=self.fireQueries)
+    return self.fireQueries
+
+  def _init_update_collection_refs(self, update: SQL_Update, options: Dict = {}):
+    table = update.table
+    self.collections[table.part] = table.part
+    self.aliases[table.part] = table.part
+    if table.alias:
+      self.aliases[table.alias] = table.part
+
+    self.collectionFields[table.part] = ['docid', '*']
+
+    self.defaultPart = next(iter(self.aliases))
+
+  def _init_update_sets(self, update: SQL_Update):
+    table = update.table
+    self.sets[table.part] = {}
+    for expr in update.sets:
+      field = expr.left.column
+      value = expr.right.value
+      self.sets[table.part][field] = value
+
+  def update_post_process(self, documents: Dict) -> List:
+    docs = []
+    if self.defaultPart in documents:
+      targetDocs = documents[self.defaultPart]
+      fields = self.collectionFields[self.defaultPart]
+      fields = self._handle_star_fields(self.defaultPart, fields, targetDocs)
+      for docId, doc in targetDocs.items():
+        jdoc = {}
+        for field in fields:
+          if field == 'docid':
+            jdoc['docid'] = docId
+          elif field in self.sets[self.defaultPart]:
+            jdoc[ self.columnNameMap[self.defaultPart][field] ] = self.sets[self.defaultPart][field]
+          else:
+            jdoc[ self.columnNameMap[self.defaultPart][field] ] = self._get_field_value(doc, field)
+        docs.append(jdoc)
+
+    return docs
+
+  def update_execute(self, client: FireSQLAbstractClient, documents: List):
+    docs = []
+    if self.defaultPart in documents:
+      targetDocs = documents[self.defaultPart]
+      fields = self.collectionFields[self.defaultPart]
+      fields = self._handle_star_fields(self.defaultPart, fields, targetDocs)
+      for docId, doc in targetDocs.items():
+        # jdoc for return list
+        jdoc = {}
+        # udoc for update
+        updateDoc = {}
+        for field in fields:
+          if field == 'docid':
+            jdoc['docid'] = docId
+          elif field in self.sets[self.defaultPart]:
+            jdoc[ self.columnNameMap[self.defaultPart][field] ] = self.sets[self.defaultPart][field]
+            updateDoc[ self.columnNameMap[self.defaultPart][field] ] = self.sets[self.defaultPart][field]
+          else:
+            jdoc[ self.columnNameMap[self.defaultPart][field] ] = self._get_field_value(doc, field)
+            updateDoc[ self.columnNameMap[self.defaultPart][field] ] = self._get_field_value(doc, field)
+        docs.append(jdoc)
+
+        # execute update to docId
+        if updateDoc:
+          client.update_collection_document(self.defaultPart, docId, updateDoc)
+
+    return docs

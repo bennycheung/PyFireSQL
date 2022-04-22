@@ -71,3 +71,9 @@ class SQL_Select():
   froms: Union[SQL_JoinExpression, List[SQL_SelectFrom]]
   where: SQL_BinaryExpression
   
+@dataclass
+class SQL_Update():
+  type='update'
+  table: SQL_SelectFrom
+  sets: List[SQL_BinaryExpression]
+  where: SQL_BinaryExpression

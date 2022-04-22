@@ -31,6 +31,23 @@ class FireSQLAbstractClient(ABC):
   def get_collection_documents(self, collectionName: str) -> Dict:
     pass
 
+  @abstractmethod
+  def generate_collection_document_id(self, collectionName: str):
+    pass
+
+  @abstractmethod
+  def set_collection_document(self, collectionName: str, docId: str, document: Dict):
+    pass
+
+  @abstractmethod
+  def update_collection_document(self, collectionName: str, docId: str, document: Dict):
+    pass
+
+  @abstractmethod
+  def delete_collection_document(self, collectionName: str, docId: str):
+    pass
+
+
 
 class FireSQLClient(FireSQLAbstractClient):
   """
@@ -61,3 +78,18 @@ class FireSQLClient(FireSQLAbstractClient):
     collectionRef = self.get_collection_ref(collectionName)
     return self.client.get_collection_documents(collectionRef)
 
+  def generate_collection_document_id(self, collectionName: str):
+    collectionRef = self.get_collection_ref(collectionName)
+    return self.client.generate_document_id(collectionRef)
+
+  def set_collection_document(self, collectionName: str, docId: str, document: Dict):
+    collectionRef = self.get_collection_ref(collectionName)
+    return self.client.set_document(collectionRef, docId, document)
+
+  def update_collection_document(self, collectionName: str, docId: str, document: Dict):
+    collectionRef = self.get_collection_ref(collectionName)
+    return self.client.update_document(collectionRef, docId, document)
+
+  def delete_collection_document(self, collectionName: str, docId: str):
+    collectionRef = self.get_collection_ref(collectionName)
+    return self.client.delete_document(collectionRef, docId)

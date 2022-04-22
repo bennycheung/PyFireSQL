@@ -1,4 +1,5 @@
 start: select -> final
+       | update -> final
 
 select: "SELECT"i select_clause "FROM"i from_clause [ "WHERE"i where_clause ]
 
@@ -18,6 +19,13 @@ from_item: name [ ["AS"i ] alias ] -> table_name
 alias: name -> alias_string
 
 where_clause: bool_expression
+
+update: "UPDATE"i from_item "SET"i set_clause [ "WHERE"i where_clause ]
+
+set_clause: [(set_expr ",")*] set_expr
+?set_expr: set_item -> set_expression
+
+set_item: equals
 
 bool_expression: bool_parentheses
                  | bool_expression "AND"i bool_parentheses -> bool_and
