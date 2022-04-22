@@ -80,7 +80,6 @@ class SQLFireUpdate(SQLFireQuery):
             updateDoc[ self.columnNameMap[self.defaultPart][field] ] = self.sets[self.defaultPart][field]
           else:
             jdoc[ self.columnNameMap[self.defaultPart][field] ] = self._get_field_value(doc, field)
-            updateDoc[ self.columnNameMap[self.defaultPart][field] ] = self._get_field_value(doc, field)
         docs.append(jdoc)
 
         # execute update to docId
