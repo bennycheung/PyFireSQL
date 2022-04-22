@@ -101,7 +101,7 @@ class FireSQL():
       self.sqlFireCommand = SQLFireInsert()
 
       if self.sqlFireCommand.generate(sqlCommand, options=options):
-        document = self.sqlFireCommmand.build()
+        document = self.sqlFireCommand.build()
         insertedDoc = self.sqlFireCommand.execute(client, document)
         return [insertedDoc]
       else:
