@@ -1,6 +1,7 @@
 start: select -> final
        | update -> final
        | insert -> final
+       | delete -> final
 
 select: "SELECT"i select_clause "FROM"i from_clause [ "WHERE"i where_clause ]
 
@@ -35,6 +36,8 @@ columns_clause: [(column_spec ",")*] column_spec
 
 values_clause: [(value_spec ",")*] value_spec
 ?value_spec: literal
+
+delete: "DELETE"i "FROM"i from_item [ "WHERE"i where_clause ]
 
 bool_expression: bool_parentheses
                  | bool_expression "AND"i bool_parentheses -> bool_and

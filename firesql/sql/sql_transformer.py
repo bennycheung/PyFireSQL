@@ -1,7 +1,7 @@
 from lark import Transformer
 from .sql_objects import *
 
-class SelectTransformer(Transformer):
+class SQLTransformer(Transformer):
   def name(self, args):
     return args[0]
 
@@ -197,3 +197,8 @@ class SelectTransformer(Transformer):
 
   def value_spce(self, args):
     return args[0]
+
+  # delete statement
+  def delete(self, args):
+    sqlDelete = SQL_Delete(table=args[0], where=args[1])
+    return sqlDelete

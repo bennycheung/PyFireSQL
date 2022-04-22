@@ -84,3 +84,11 @@ class SQL_Insert():
   table: SQL_SelectFrom
   columns: List[SQL_ColumnRef]
   values: SQL_ValueList
+
+@dataclass
+class SQL_Delete():
+  type='delete'
+  table: SQL_SelectFrom
+  where: SQL_BinaryExpression
+
+SQL_DML_Command = Union[SQL_Select, SQL_Insert, SQL_Update, SQL_Delete]

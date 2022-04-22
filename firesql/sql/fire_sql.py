@@ -8,13 +8,15 @@ from .sql_objects import (
   SQL_Select,
   SQL_Insert,
   SQL_Update,
+  SQL_Delete,
 )
-from .sql_transformer import SelectTransformer
+from .sql_transformer import SQLTransformer
 
 from .sql_fire_client import FireSQLAbstractClient
 from .sql_fire_query import SQLFireQuery
 from .sql_fire_update import SQLFireUpdate
 from .sql_fire_insert import SQLFireInsert
+from .sql_fire_delete import SQLFireDelete
 
 
 _ROOT = Path(__file__).parent
@@ -37,7 +39,7 @@ class FireSQL():
   """
 
   def __init__(self):
-    self.transformer = SelectTransformer()
+    self.transformer = SQLTransformer()
     self.parser = Lark(_GRAMMAR_TEXT, parser="lalr")
 
   def select_fields(self) -> List:
@@ -120,5 +122,23 @@ class FireSQL():
       filterDocuments = self.sqlFireCommand.filter_documents(documents, filterQueries)
 
       # post-processing update of collections if needed
-      updateDocs = self.sqlFireCommand.update_execute(client, filterDocuments)
-      return updateDocs 
+      updatedDocs = self.sqlFireCommand.update_execute(client, filterDocuments)
+      return updatedDocs 
+
+    elif isinstance(sqlCommand, SQL_Delete):
+      self.sqlFireCommand = SQLFireDelete()
+
+      # transform parsed SQL components into firebase queries
+      queries = self.sqlFireCommand.delete_generate(sqlCommand, options=options)
+      fireQueries = self.sqlFireCommand.firebase_queries(queries)
+      filterQueries = self.sqlFireCommand.filter_queries(queries)
+
+      # execute firebase queries for each collection
+      documents = self.sqlFireCommand.execute(client, fireQueries)
+
+      # execute filter queries for each collection
+      filterDocuments = self.sqlFireCommand.filter_documents(documents, filterQueries)
+
+      # post-processing delete of collections if needed
+      deletedDocs = self.sqlFireCommand.delete_execute(client, filterDocuments)
+      return deletedDocs 
