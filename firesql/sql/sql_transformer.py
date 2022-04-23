@@ -216,7 +216,13 @@ class SQLTransformer(Transformer):
   def json_string(self, s):
     return s[1:-1].replace('\\"', '"')
 
-  json_array = list
+  # json_array = list
+  def json_array(self, args):
+    if args[0] == None:
+      return []
+    else:
+      return args
+
   json_pair = tuple
   json_object = dict
   json_number = v_args(inline=True)(float)

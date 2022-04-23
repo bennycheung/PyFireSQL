@@ -3,6 +3,7 @@ from typing import Dict, List
 
 from .sql_objects import (
   SQL_Insert,
+  SQL_ValueJSON,
 )
 
 from .sql_date import SQLDate
@@ -50,8 +51,17 @@ class SQLFireInsert():
 
   def post_process(self) -> Dict:
     doc = {}
-    for idx in range(len(self.columns)): 
-      doc[ self.columns[idx] ] = self.values[idx]
+    if '*' in self.columns:
+      # if star is specified as the column, only JSON dict can be inserted
+      # the first level of JSON dict keys are inserted into doc.
+      for value in self.values:
+        if isinstance(value, Dict):
+          for key in value.keys():
+            doc[key] = value[key]
+    else:
+      # process as a corresponding (column, value) pair
+      for idx in range(len(self.columns)): 
+        doc[ self.columns[idx] ] = self.values[idx]
     return doc
 
   def execute(self, client: FireSQLAbstractClient, document: Dict) -> Dict:
