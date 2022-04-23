@@ -65,91 +65,6 @@ A grammar is a formal description of a language that can be used to recognize it
 
 The `where_clause` is usually nonterminal, which means that it can be replaced by the group of elements on the right, `bool_expression`. The element `bool_expression` could contains other nonterminal symbols or terminal ones. Terminal symbols are simply the ones that do not appear as a `<symbol>` anywhere in the grammar and capitalized. A typical example of a terminal symbol is a string of characters, like "(", ")", "AND", "OR", “CNAME”.
 
-### SELECT Statement
-By using `lark` [EBNF-like grammar](https://github.com/bennycheung/PyFireSQL/blob/main/firesql/sql/grammar/firesql.lark),
-we have encoded the core `SELECT` statement, which is subsequently transformed into Firestore collection queries to be executed.
-
-- SELECT columns for collection field's projection
-- FROM sub-clause for collections
-- FROM/JOIN sub-clause for joining collections (restricted to 1 join)
-- WHERE sub-clause with boolean algebra expression for each collection's queries on field values
-  - boolean operators: AND (currently OR is not implemented)
-  - operators: =, !=, >, <, <=, >=
-  - container expressions: IN, NOT IN
-  - array contains expressions: CONTAIN, ANY CONTAIN
-  - filter expressions: LIKE, NOT LIKE
-  - null expressions: IS NULL, IS NOT NULL
-- Aggregation functions applied to the result set
-  - COUNT for any field
-  - SUM, AVG, MIN, MAX for numeric field
-
-But the processor has the following limitations, which we can provide post-processing on the query results set.
-- No ORDER BY sub-clause
-- No GROUP BY/HAVING sub-clause
-- No WINDOW sub-clause
-
-#### Examples
-For example, the following statements can be expressed,
-> All keywords are case insensitive. All whitespaces are ignored by the parser.
-
-> `docid` is a special field name to extract the selected document's Id
-```sql
-  SELECT docid, email, state
-    FROM
-      Users
-    WHERE
-      state = 'ACTIVE'
-```
-
-> The `*` will select all fields, boolean operator 'AND' to specify multiple query criteria.
-```sql
-  SELECT *
-    FROM
-      Users
-    WHERE
-      state IN ('ACTIVE') AND
-      u.email LIKE '%benny%'
-```
-
-> The field-subfield can use the `"` to escape the field name with `.` in it.
-```sql
-  SELECT *
-    FROM
-      Users as u
-    WHERE
-      u.state IN ('ACTIVE') AND
-      u."location.displayName" = 'Work From Home'
-```
-
-> The `JOIN` expression to join 2 collections together
-```sql
-SELECT u.email, u.state, b.date, b.state
-  FROM
-    Users as u JOIN Bookings as b
-    ON u.email = b.email
-  WHERE 
-      u.state = 'ACTIVE' AND
-      u.email LIKE '%benny%' AND
-      b.state IN ('CHECKED_IN', 'CHECKED_OUT') AND
-      b.date >= '2022-03-18T04:00:00'
-```
-
-> The `COUNT`, `MIN`, `MAX`, `SUM`, `AVG` are the aggregation functions computed against the result set.
-> Only numeric field (e.g. `cost` here) is numeric to have a valid value for `MIN`, `MAX`, `SUM`, `AVG` computation.
-```sql
-SELECT COUNT(*), MIN(b.cost), MAX(b.cost), SUM(b.cost), AVG(b.cost)
-  FROM
-    Users as u JOIN Bookings as b
-    ON u.email = b.email
-  WHERE 
-      u.state = 'ACTIVE' AND
-      u.email LIKE '%benny%' AND
-      b.state IN ('CHECKED_IN', 'CHECKED_OUT') AND
-```
-      
-
-> See [firesql.lark](https://github.com/bennycheung/PyFireSQL/blob/main/firesql/sql/grammar/firesql.lark) for the FireSQL grammar specification.
-
 ### Collection Path
 The Firestore collection has a set of documents. Each document can be nested with more collections. Firestore identifies a collection by a path, looks like `Companies/bennycorp/Users` means `Companies` collection has a document `bennycorp`, which has `Users` collection.
 
@@ -241,3 +156,47 @@ After the Firebase query, the pattern matching is used as the filtering expressi
 - prefix match `pattern%`
 - suffix match `%pattern`
 - infix match `%pattern%`
+
+### JSON Data
+When the field value needs to take the complex data types, such as array or map (aka. dictionary),
+these complex data types must be encoded within a JSON enclosure.
+
+For example,
+
+```sql
+INSERT INTO Companies/bennycorp/Visits
+  ( email, event )
+  VALUES
+    ( 'btscheung+test1@gmail.com', JSON(["event1","event2","event3"]) )
+```
+
+When the collection `Visits` has a field `event` which takes an array of event names,
+we assign `event` field by using the `JSON` enclosure to encode the array `["event1","event2","event3"]` with a valid JSON string.
+
+Since we are dealing with Firestore as a document structure without a schema,
+we can insert all the key pairs from a JSON map into the collection.
+
+For example, the following insert statement - column specification uses `*` to indicate all fields.
+We are inserting a list of
+`email`, `firstName`, `lastName`, `groups` (as array), `roles` (as array), `vaccination`, `access` (as map).
+
+```
+INSERT INTO Companies/bennycorp/Users
+  ( * )
+  VALUES (
+    JSON(
+      {
+        "email": "btscheung+twotwo@gmail.com",
+        "name": "Benny TwoTwo",
+        "groups": [],
+        "roles": [
+            "ADMIN"
+        ],
+        "vaccination": null,
+        "access": {
+          "hasAccess": true
+        }
+      }
+    )
+  )
+```

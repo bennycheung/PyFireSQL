@@ -12,6 +12,10 @@ Welcome to PyFireSQL's documentation!
    :hidden:
 
    parser
+   sql_select
+   sql_insert
+   sql_update
+   sql_delete
    future
 
 .. toctree::
