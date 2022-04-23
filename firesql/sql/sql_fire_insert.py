@@ -58,6 +58,8 @@ class SQLFireInsert():
         if isinstance(value, Dict):
           for key in value.keys():
             doc[key] = value[key]
+      # transfer all the keys to columns specification
+      self.columns = [key for key in doc]
     else:
       # process as a corresponding (column, value) pair
       for idx in range(len(self.columns)): 
