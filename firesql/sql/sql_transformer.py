@@ -1,4 +1,5 @@
-from lark import Transformer
+from lark import Transformer, v_args
+
 from .sql_objects import *
 
 class SQLTransformer(Transformer):
@@ -11,8 +12,8 @@ class SQLTransformer(Transformer):
   CNAME = str
   STAR = str
 
-  def ESCAPED_STRING(self, args):
-    return str(args).strip('"')
+  #def ESCAPED_STRING(self, args):
+  #  return str(args).strip('"')
 
   def AGGREGATION(self, args):
     funcName = str(args).strip('(').lower()
@@ -202,3 +203,24 @@ class SQLTransformer(Transformer):
   def delete(self, args):
     sqlDelete = SQL_Delete(table=args[0], where=args[1])
     return sqlDelete
+
+  # json value
+  def json(self, args):
+    sqlValue = SQL_ValueJSON(args[0])
+    return sqlValue
+
+  def json_value(self, args):
+    return args[0]
+
+  @v_args(inline=True)
+  def json_string(self, s):
+    return s[1:-1].replace('\\"', '"')
+
+  json_array = list
+  json_pair = tuple
+  json_object = dict
+  json_number = v_args(inline=True)(float)
+
+  json_null = lambda self, _: None
+  json_true = lambda self, _: True
+  json_false = lambda self, _: False

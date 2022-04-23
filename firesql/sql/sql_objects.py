@@ -25,7 +25,15 @@ class SQL_ValueNumber():
   type='number'
   value: Union[int, float]
 
-SQL_Value = Union[SQL_ValueBool, SQL_ValueNumber, SQL_ValueString]
+@dataclass
+class SQL_ValueJSON():
+  """
+  Store information about a JSON data
+  """
+  type='json'
+  value: Any
+
+SQL_Value = Union[SQL_ValueBool, SQL_ValueNumber, SQL_ValueString, SQL_ValueJSON]
 SQL_ValueList = List[SQL_Value]
 
 @dataclass
