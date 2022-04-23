@@ -1,6 +1,6 @@
 import os
 from pathlib import Path
-from typing import Dict, List
+from typing import Dict, List, Union
 
 from lark import Lark
 
@@ -56,27 +56,45 @@ class FireSQL():
   def execution_result(self) -> Dict:
     return self.sqlFireCommand.execution_result()
 
-  def sql(self, client: FireSQLAbstractClient, sql: str, options: Dict = {}) -> List:
+  def execute(self, client: FireSQLAbstractClient, sql: str, options: Dict = {}) -> List:
     """
-    Given a Firebase connection, execute the FireSQL statement.
+    Given a Firebase connection, parse and execute all the FireSQL statements.
 
     Args:
       client (FirebaseClient): The client has established a Firebase connection
       sql (str): FireSQL statement to be executed
-      options (Dist): Unused
+      options (Dict): Unused
 
     Returns:
-      docs: A list of selected documents
+      docs: A list of executed documents
     """
     try:
       # select statement SQL parser to produce the AST
       ast = self.parser.parse(sql)
       # transform AST into parsed SQL components
-      sqlCommand = self.transformer.transform(ast)
+      statements = self.transformer.transform(ast)
     except Exception as e:
       print('Parseing Error: {}'.format(e))
       return []
 
+    # iterating through all FireSQL statements
+    for sqlCommand in statements:
+      docs = self.execute_command(client, sqlCommand)
+    return docs
+
+
+  def execute_command(self, client: FireSQLAbstractClient, sqlCommand: Union[SQL_Select, SQL_Insert, SQL_Update, SQL_Delete], options: Dict = {}) -> List:
+    """
+    Given a Firebase connection, execute a FireSQL statements.
+
+    Args:
+      client (FirebaseClient): The client has established a Firebase connection
+      sqlCommand (SQL_Select|SQL_Insert|SQL_Update|SQL_Delete): FireSQL statement to be executed
+      options (Dict): Unused
+
+    Returns:
+      docs: A list of executed documents
+    """
 
     if isinstance(sqlCommand, SQL_Select):
       self.sqlFireCommand = SQLFireQuery()

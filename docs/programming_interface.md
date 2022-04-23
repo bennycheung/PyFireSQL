@@ -18,10 +18,10 @@ sqlClient = FireSQLClient(client)
 # query via the FireSQL interface - the results are in list of docs (Dict)
 query = "SELECT * FROM Users WHERE state = 'ACTIVE'"
 fireSQL = FireSQL()
-docs = fireSQL.sql(sqlClient, query)
+docs = fireSQL.execute(sqlClient, query)
 ```
 
-After `fireSQL.sql()` query completed, the results are a list of docs (as Dict) that satisfied the query.
+After `fireSQL.execute()` query completed, the results are a list of docs (as Dict) that satisfied the query.
 Then we can pass the list of docs to render into any output format, in our case, the `DocPrinter` object can output `csv` or `json` with the select fields.
 
 ```python

@@ -1,7 +1,6 @@
-start: select -> final
-       | update -> final
-       | insert -> final
-       | delete -> final
+start: [(sql_expr ";")*] sql_expr -> final
+
+sql_expr: select | update | insert | delete
 
 select: "SELECT"i select_clause "FROM"i from_clause [ "WHERE"i where_clause ]
 

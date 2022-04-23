@@ -4,7 +4,7 @@ API Reference
 FireSQL
 -------
 
-.. automodule:: firesql.sql.sql_fire_query
+.. automodule:: firesql.sql.fire_sql
    :members:
 
 .. automodule:: firesql.sql.doc_printer

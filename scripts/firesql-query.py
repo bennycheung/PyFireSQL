@@ -54,7 +54,7 @@ if __name__ == "__main__":
   sqlClient = FireSQLClient(client)
 
   fireSQL = FireSQL()
-  docs = fireSQL.sql(sqlClient, query)
+  docs = fireSQL.execute(sqlClient, query)
 
   if docs:
     docPrinter = DocPrinter()

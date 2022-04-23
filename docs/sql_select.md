@@ -1,5 +1,5 @@
 ## SELECT Statement
-The SELECT statement is used to select data from a database.
+The SELECT statement is used to select documents from a collection.
 
 --------------------
 ### SELECT Syntax

@@ -3,6 +3,12 @@ from lark import Transformer, v_args
 from .sql_objects import *
 
 class SQLTransformer(Transformer):
+  def final(self, args):
+    return args
+
+  def sql_expr(self, args):
+    return args[0]
+
   def name(self, args):
     return args[0]
 
@@ -162,9 +168,6 @@ class SQLTransformer(Transformer):
     sqlSelect = SQL_Select(columns=args[0], froms=args[1], where=args[2])
     return sqlSelect
   
-  def final(self, args):
-    return args[0]
-
   # update statement
   def update(self, args):
     sqlUpdate = SQL_Update(table=args[0], sets=args[1], where=args[2])
