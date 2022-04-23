@@ -33,7 +33,7 @@ class SQLFireDelete(SQLFireQuery):
 
     self.defaultPart = next(iter(self.aliases))
 
-  def delete_post_process(self, documents: Dict) -> List:
+  def post_process(self, documents: Dict) -> List:
     docs = []
     if self.defaultPart in documents:
       targetDocs = documents[self.defaultPart]
@@ -50,7 +50,7 @@ class SQLFireDelete(SQLFireQuery):
 
     return docs
 
-  def delete_execute(self, client: FireSQLAbstractClient, documents: List):
+  def execute(self, client: FireSQLAbstractClient, documents: List):
     docs = []
     if self.defaultPart in documents:
       targetDocs = documents[self.defaultPart]
@@ -68,6 +68,10 @@ class SQLFireDelete(SQLFireQuery):
 
         # execute update to docId
         if jdoc:
-          client.delete_collection_document(self.defaultPart, docId)
+          self.result = client.delete_collection_document(self.defaultPart, docId)
 
+    self.result = {
+      'success': True,
+      'message': ''
+    }
     return docs

@@ -42,7 +42,7 @@ class SQLFireUpdate(SQLFireQuery):
       value = expr.right.value
       self.sets[table.part][field] = value
 
-  def update_post_process(self, documents: Dict) -> List:
+  def post_process(self, documents: Dict) -> List:
     docs = []
     if self.defaultPart in documents:
       targetDocs = documents[self.defaultPart]
@@ -61,7 +61,7 @@ class SQLFireUpdate(SQLFireQuery):
 
     return docs
 
-  def update_execute(self, client: FireSQLAbstractClient, documents: List):
+  def execute(self, client: FireSQLAbstractClient, documents: List):
     docs = []
     if self.defaultPart in documents:
       targetDocs = documents[self.defaultPart]
@@ -92,6 +92,10 @@ class SQLFireUpdate(SQLFireQuery):
 
         # execute update to docId
         if updateDoc:
-          client.update_collection_document(self.defaultPart, docId, updateDoc)
+          self.result = client.update_collection_document(self.defaultPart, docId, updateDoc)
 
+    self.result = {
+      'success': True,
+      'message': ''
+    }
     return docs

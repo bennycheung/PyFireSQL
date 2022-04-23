@@ -19,6 +19,7 @@ class SQLFireInsert():
     self.part = None
     self.columns = []
     self.values = []
+    self.result = {}
 
   def generate(self, insert: SQL_Insert, options: Dict = {}):
     self.part = insert.table.part
@@ -43,8 +44,11 @@ class SQLFireInsert():
     for field in self.columns:
       fields.append(field)
     return fields
-  
-  def build(self) -> Dict:
+
+  def execution_result(self) -> Dict:
+    return self.result
+
+  def post_process(self) -> Dict:
     doc = {}
     for idx in range(len(self.columns)): 
       doc[ self.columns[idx] ] = self.values[idx]
@@ -53,7 +57,7 @@ class SQLFireInsert():
   def execute(self, client: FireSQLAbstractClient, document: Dict) -> Dict:
     docId = client.generate_collection_document_id(self.part)
     if docId:
-      client.set_collection_document(self.part, docId, document)
+      self.result = client.set_collection_document(self.part, docId, document)
 
     # assign docid back to document and return
     document['docid'] = docId

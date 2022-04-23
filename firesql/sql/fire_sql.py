@@ -53,6 +53,9 @@ class FireSQL():
     """
     return self.sqlFireCommand.select_fields()
 
+  def execution_result(self) -> Dict:
+    return self.sqlFireCommand.execution_result()
+
   def sql(self, client: FireSQLAbstractClient, sql: str, options: Dict = {}) -> List:
     """
     Given a Firebase connection, execute the FireSQL statement.
@@ -84,7 +87,7 @@ class FireSQL():
       filterQueries = self.sqlFireCommand.filter_queries(queries)
 
       # execute firebase queries for each collection
-      documents = self.sqlFireCommand.execute(client, fireQueries)
+      documents = self.sqlFireCommand.execute_query(client, fireQueries)
 
       # execute filter queries for each collection
       filterDocuments = self.sqlFireCommand.filter_documents(documents, filterQueries)
@@ -92,16 +95,13 @@ class FireSQL():
       # post-processing join of collections if needed
       selectDocs = self.sqlFireCommand.post_process(filterDocuments)
 
-      # aggregation docs if function existed
-      aggDocs = self.sqlFireCommand.aggregation(selectDocs)
-
-      return aggDocs
+      return selectDocs
 
     elif isinstance(sqlCommand, SQL_Insert):
       self.sqlFireCommand = SQLFireInsert()
 
       if self.sqlFireCommand.generate(sqlCommand, options=options):
-        document = self.sqlFireCommand.build()
+        document = self.sqlFireCommand.post_process()
         insertedDoc = self.sqlFireCommand.execute(client, document)
         return [insertedDoc]
       else:
@@ -116,13 +116,13 @@ class FireSQL():
       filterQueries = self.sqlFireCommand.filter_queries(queries)
 
       # execute firebase queries for each collection
-      documents = self.sqlFireCommand.execute(client, fireQueries)
+      documents = self.sqlFireCommand.execute_query(client, fireQueries)
 
       # execute filter queries for each collection
       filterDocuments = self.sqlFireCommand.filter_documents(documents, filterQueries)
 
       # post-processing update of collections if needed
-      updatedDocs = self.sqlFireCommand.update_execute(client, filterDocuments)
+      updatedDocs = self.sqlFireCommand.execute(client, filterDocuments)
       return updatedDocs 
 
     elif isinstance(sqlCommand, SQL_Delete):
@@ -134,11 +134,11 @@ class FireSQL():
       filterQueries = self.sqlFireCommand.filter_queries(queries)
 
       # execute firebase queries for each collection
-      documents = self.sqlFireCommand.execute(client, fireQueries)
+      documents = self.sqlFireCommand.execute_query(client, fireQueries)
 
       # execute filter queries for each collection
       filterDocuments = self.sqlFireCommand.filter_documents(documents, filterQueries)
 
       # post-processing delete of collections if needed
-      deletedDocs = self.sqlFireCommand.delete_execute(client, filterDocuments)
+      deletedDocs = self.sqlFireCommand.execute(client, filterDocuments)
       return deletedDocs 

@@ -29,6 +29,7 @@ class SQLFireQuery():
     self.collectionFields= {}
     self.aggregationFields={}
     self.on = None
+    self.result = {}
 
   def generate(self, select: SQL_Select, options: Dict = {}) -> Dict:
     self._init_collection_refs(select, options)
@@ -152,7 +153,7 @@ class SQLFireQuery():
             filterQueries[part].append(query)
     return filterQueries
 
-  def execute(self, client: FireSQLAbstractClient, fireQueries: Dict) -> Dict:
+  def execute_query(self, client: FireSQLAbstractClient, fireQueries: Dict) -> Dict:
     documents = {}
     if fireQueries:
       for part in fireQueries.keys():
@@ -287,7 +288,12 @@ class SQLFireQuery():
               jdoc[ self.columnNameMap[self.defaultPart][field] ] = self._get_field_value(doc, field)
           docs.append(jdoc)
 
-    return docs
+    aggDocs = self.aggregation(docs)
+    self.result = {
+      'success': True,
+      'message': ''
+    }
+    return aggDocs
 
   def aggregation(self, documents: Dict) -> List:
     if FireSQLAggregate.hasAggregation(self.aggregationFields):
@@ -296,3 +302,5 @@ class SQLFireQuery():
     else:
       return documents
 
+  def execution_result(self) -> Dict:
+    return self.result
