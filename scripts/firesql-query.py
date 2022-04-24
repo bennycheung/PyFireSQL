@@ -25,9 +25,11 @@ from firesql.sql import FireSQL, DocPrinter
 if __name__ == "__main__":
   # construct the argument parser and parse the arguments
   ap = argparse.ArgumentParser()
+  ap.add_argument("-d", "--debug", action='store_true',
+    help="FireSQL debug"),
   ap.add_argument("-c", "--credentials", type=str, default="../credentials/credentials.json",
     help="credentials JSON path")
-  ap.add_argument("-f", "--format", type=str, default="csv",
+  ap.add_argument("-f", "--format", type=str, default="",
     help="output format (csv|json)")
   ap.add_argument("-i", "--input", type=str, default="",
     help="FireSQL query input file (required)")
@@ -39,6 +41,7 @@ if __name__ == "__main__":
   format = args["format"].lower()
   input = args["input"]
   query = args["query"]
+  debug = args["debug"]
 
   if not query:
     if input:
@@ -60,7 +63,9 @@ if __name__ == "__main__":
     docPrinter = DocPrinter()
     if format == 'csv':
       docPrinter.printCSV(docs, fireSQL.select_fields())
-    else:
+    elif format == 'json':
       docPrinter.printJSON(docs, fireSQL.select_fields())
+    else:
+      print(fireSQL.execution_results())
   else:
     print("no record found!")
