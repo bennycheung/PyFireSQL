@@ -5,6 +5,7 @@ from typing import Dict, List, Union
 from lark import Lark
 
 from .sql_objects import (
+  SQL_DML_Command,
   SQL_Select,
   SQL_Insert,
   SQL_Update,
@@ -83,7 +84,7 @@ class FireSQL():
     return docs
 
 
-  def execute_command(self, client: FireSQLAbstractClient, sqlCommand: Union[SQL_Select, SQL_Insert, SQL_Update, SQL_Delete], options: Dict = {}) -> List:
+  def execute_command(self, client: FireSQLAbstractClient, sqlCommand: SQL_DML_Command, options: Dict = {}) -> List:
     """
     Given a Firebase connection, execute a FireSQL statements.
 

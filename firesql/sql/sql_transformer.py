@@ -1,5 +1,6 @@
 from lark import Transformer, v_args
 
+from .sql_date import SQLDate
 from .sql_objects import *
 
 class SQLTransformer(Transformer):
@@ -40,7 +41,12 @@ class SQLTransformer(Transformer):
     return sqlValue
 
   def string(self, args):
-    sqlValue = SQL_ValueString(eval(args[0].value))
+    value = eval(args[0].value)
+    if isinstance(value, str) and SQLDate.validate_iso8601(value):
+      value = SQLDate.value_to_datetime(value)
+      sqlValue = SQL_ValueDateTime(value)
+    else:
+      sqlValue = SQL_ValueString(value)
     return sqlValue
   
   def literal(self, args):
@@ -217,7 +223,10 @@ class SQLTransformer(Transformer):
 
   @v_args(inline=True)
   def json_string(self, s):
-    return s[1:-1].replace('\\"', '"')
+    value = s[1:-1].replace('\\"', '"')
+    if isinstance(value, str) and SQLDate.validate_iso8601(value):
+      value = SQLDate.value_to_datetime(value)
+    return value
 
   # json_array = list
   def json_array(self, args):

@@ -1,3 +1,4 @@
+import datetime
 from dataclasses import dataclass
 from typing import Any, Callable, ClassVar, Dict, List, Optional, Union
 
@@ -26,6 +27,14 @@ class SQL_ValueNumber():
   value: Union[int, float]
 
 @dataclass
+class SQL_ValueDateTime():
+  """
+  Store information about a datetime object
+  """
+  type='datetime'
+  value: datetime.datetime
+
+@dataclass
 class SQL_ValueJSON():
   """
   Store information about a JSON data
@@ -33,7 +42,7 @@ class SQL_ValueJSON():
   type='json'
   value: Any
 
-SQL_Value = Union[SQL_ValueBool, SQL_ValueNumber, SQL_ValueString, SQL_ValueJSON]
+SQL_Value = Union[SQL_ValueBool, SQL_ValueNumber, SQL_ValueString, SQL_ValueDateTime, SQL_ValueJSON]
 SQL_ValueList = List[SQL_Value]
 
 @dataclass

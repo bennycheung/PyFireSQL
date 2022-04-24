@@ -1,6 +1,7 @@
 import re
 import json
 import datetime
+from .sql_date import SQLDate
 
 class DocPrinter:
   """
@@ -8,37 +9,12 @@ class DocPrinter:
 
   Console output in the specified format.
   """
-  DATETIME_ISO_FORMAT = "%Y-%m-%dT%H:%M:%S"
-  DATETIME_ISO_FORMAT_REGEX = r'^(-?(?:[1-9][0-9]*)?[0-9]{4})-(1[0-2]|0[1-9])-(3[01]|0[1-9]|[12][0-9])T(2[0-3]|[01][0-9]):([0-5][0-9]):([0-5][0-9])(\.[0-9]+)?(Z|[+-](?:2[0-3]|[01][0-9]):[0-5][0-9])?$'
-
-  match_iso8601 = re.compile(DATETIME_ISO_FORMAT_REGEX).match
-
-  @classmethod
-  def validate_iso8601(cls, str_val):
-      try:            
-          if DocPrinter.match_iso8601( str_val ) is not None:
-              return True
-      except:
-          pass
-      return False
-
-  def __init__(self):
-    pass
-
   def _get_field_value(self, doc, field):
     return doc.get(field, '')
 
-  def document_to_json(self, document):
-    def _convert_datetime(o):
-      if isinstance(o, datetime.datetime):
-        return o.strftime(DocPrinter.DATETIME_ISO_FORMAT)
-
-    json_str = json.dumps(document, default=_convert_datetime)
-    return json_str
-
   def value_conversion(self, value):
     if isinstance(value, datetime.datetime):
-      return value.strftime(DocPrinter.DATETIME_ISO_FORMAT)
+      return value.strftime(SQLDate.DATETIME_ISO_FORMAT)
     elif isinstance(value, list):
       return [self.value_conversion(v) for v in value]
     elif isinstance(value, dict):
@@ -69,7 +45,7 @@ class DocPrinter:
       joinValue = ','.join(convertList)
       return f'"{joinValue}"'
     elif isinstance(value, dict):
-      jsonValue = self.document_to_json(value)
+      jsonValue = SQLDate.document_to_json(value)
       escapedJsonValue = jsonValue.replace('"', '\\"')
       return f'"{escapedJsonValue}"'
     else:
@@ -125,7 +101,7 @@ class DocPrinter:
         count += 1
         fields = self.value_conversion(doc)
         comma = ',' if count < total else ''
-        print('{}{}'.format( self.document_to_json(fields), comma ))
+        print('{}{}'.format( SQLDate.document_to_json(fields), comma ))
     else:
       for doc in docs:
         count += 1
@@ -136,5 +112,5 @@ class DocPrinter:
           else:
             fields[field] = ''
         comma = ',' if count < total else ''
-        print('{}{}'.format( self.document_to_json(fields), comma ))
+        print('{}{}'.format( SQLDate.document_to_json(fields), comma ))
     print("]")
