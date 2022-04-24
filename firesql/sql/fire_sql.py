@@ -1,4 +1,5 @@
 import os
+import copy
 from pathlib import Path
 from typing import Dict, List, Union
 
@@ -42,6 +43,10 @@ class FireSQL():
   def __init__(self):
     self.transformer = SQLTransformer()
     self.parser = Lark(_GRAMMAR_TEXT, parser="lalr")
+    self.clear()
+
+  def clear(self):
+    self.results = []
 
   def select_fields(self) -> List:
     """
@@ -54,8 +59,11 @@ class FireSQL():
     """
     return self.sqlFireCommand.select_fields()
 
-  def execution_result(self) -> Dict:
+  def _get_execution_result(self) -> Dict:
     return self.sqlFireCommand.execution_result()
+
+  def execution_results(self) -> List:
+    return self.results
 
   def execute(self, client: FireSQLAbstractClient, sql: str, options: Dict = {}) -> List:
     """
@@ -79,8 +87,12 @@ class FireSQL():
       return []
 
     # iterating through all FireSQL statements
+    self.clear()
     for sqlCommand in statements:
       docs = self.execute_command(client, sqlCommand)
+
+      # collect each execution result into results
+      self.results.append(self._get_execution_result())
     return docs
 
 
