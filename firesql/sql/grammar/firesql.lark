@@ -1,4 +1,4 @@
-start: [(sql_expr ";")*] sql_expr -> final
+start: [(sql_expr ";")*] sql_expr ";"? -> final
 
 sql_expr: select | update | insert | delete
 

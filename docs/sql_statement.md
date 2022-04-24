@@ -25,5 +25,4 @@ INSERT INTO Users (email, name) VALUES ('btscheung+threethree@gmail.com', 'Benny
 
 ```
 
-> - If only one FireSQL statement, it should not have a semi-colon at the end.
-> - The last FireSQL statement should not have a semi-colon also.
+> - The last FireSQL statement's semi-colon is optional.
