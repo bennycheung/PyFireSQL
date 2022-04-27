@@ -37,7 +37,7 @@ The set of implemented SQL-like DML (Data Manipulation Language) statements are,
 | UPDATE | modify the existing documents in a collection
 | DELETE | delete existing documents in a collection
 
-Please read the details in the corresponding [FireSQL Documentation @readthedocs](https://pyfiresql.readthedocs.io/en/latest/).
+Please read the details in the corresponding [PyFireSQL Documentation @readthedocs](https://pyfiresql.readthedocs.io/en/latest/).
 
 > See `firesql/sql/grammar/firesql.lark` for the FireSQL grammar specification.
 
