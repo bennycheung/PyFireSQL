@@ -158,8 +158,10 @@ After the Firebase query, the pattern matching is used as the filtering expressi
 - infix match `%pattern%`
 
 ### JSON Data
-When the field value needs to take the complex data types, such as array or map (aka. dictionary),
-these complex data types must be encoded within a JSON enclosure.
+PyFireSQL provides JSON data supports, in particular, for the `INSERT` and `UPDATE` statements that must take complex data types.
+When the field value needs to take the complex data types, such as array or map (aka. Python dict),
+these complex data types must be encoded within a JSON enclosure. The JSON enclosure can interpret any valid JSON object;
+subsequently translates into the corresponding Firestore supported data types.
 
 For example,
 
