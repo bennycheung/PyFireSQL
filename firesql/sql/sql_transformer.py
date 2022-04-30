@@ -84,6 +84,9 @@ class SQLTransformer(Transformer):
   def select_clause(self, args):
     return args[0]
 
+  def select_all_distinct(self, args):
+    return ['alldistinct', args[0]]
+
   def select_distinct(self, args):
     return ['distinct', args[0]]
 

@@ -4,7 +4,8 @@ sql_expr: select | update | insert | delete
 
 select: "SELECT"i select_clause "FROM"i from_clause [ "WHERE"i where_clause ]
 
-select_clause: "DISTINCT"i select_list -> select_distinct
+select_clause: "ALL"i "DISTINCT"i select_list -> select_all_distinct
+              |"DISTINCT"i select_list -> select_distinct
               | select_list -> select_all
 select_list: [(column_expr ",")*] column_expr
 column_expr.0: expression [ [ "AS"i ] alias ] -> select_expression

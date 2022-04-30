@@ -293,6 +293,8 @@ class SQLFireQuery():
     # if select distinct mode
     if self.mode == 'distinct':
       docs = self.distinct(docs)
+    elif self.mode == 'alldistinct':
+      docs = self.all_distinct(docs)
 
     aggDocs = self.aggregation(docs)
     self.result = {
@@ -302,6 +304,19 @@ class SQLFireQuery():
     return aggDocs
 
   def distinct(self, documents: Dict) -> List:
+    # distinct only for the first field
+    fields = self.select_fields()
+    if len(fields) > 0:
+      firstField = fields[0]
+      distinctDocs = {}
+      for doc in documents:
+        distinctDocs[ doc[firstField] ] = doc
+      return list( distinctDocs.values() )
+    else:
+      documents
+
+  def all_distinct(self, documents: Dict) -> List:
+    # distinct for all fields
     distinctDocs = {}
     for doc in documents:
       # make all document's value combined to be a key
