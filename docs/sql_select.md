@@ -4,13 +4,14 @@ The SELECT statement is used to select documents from a collection.
 --------------------
 ### SELECT Syntax
 ```sql
-SELECT field1, field2, ...
+SELECT [DISTINCT] field1, field2, ...
 FROM collection_name
 WHERE conditions
 ```
 
 Here, field1, field2, ... are the field names of the collection to select data from.
 If we want to select all the fields available in the collection, use the following syntax:
+The `DISTINCT` modifier will select the unique values from (field1, field2, ...).
 
 ```sql
 SELECT *
@@ -21,6 +22,7 @@ By using `lark` [EBNF-like grammar](https://github.com/bennycheung/PyFireSQL/blo
 we have encoded the core `SELECT` statement, which is subsequently transformed into Firestore collection queries to be executed.
 
 - SELECT columns for collection field's projection
+  - DISTINCT modifier restricts the result only included the unique field(s) value
 - FROM sub-clause for collections
 - FROM/JOIN sub-clause for joining collections (restricted to 1 join)
 - WHERE sub-clause with boolean algebra expression for each collection's queries on field values
@@ -96,6 +98,15 @@ SELECT COUNT(*), MIN(b.cost), MAX(b.cost), SUM(b.cost), AVG(b.cost)
       u.state = 'ACTIVE' AND
       u.email LIKE '%benny%' AND
       b.state IN ('CHECKED_IN', 'CHECKED_OUT') AND
+```
+
+> The `DISTINCT` modifier will select only the unique field(s).
+```sql
+SELECT DISTINCT email
+  FROM
+    Bookings
+  WHERE
+    date > '2022-04-01T00:00:00'
 ```
       
 

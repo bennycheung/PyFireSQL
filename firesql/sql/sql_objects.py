@@ -84,6 +84,7 @@ class SQL_JoinExpression():
 @dataclass
 class SQL_Select():
   type='select'
+  mode: str
   columns: List[SQL_ColumnRef]
   froms: Union[SQL_JoinExpression, List[SQL_SelectFrom]]
   where: SQL_BinaryExpression

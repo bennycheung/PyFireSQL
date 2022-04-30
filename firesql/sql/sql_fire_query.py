@@ -33,6 +33,7 @@ class SQLFireQuery():
     self.result = {}
 
   def generate(self, select: SQL_Select, options: Dict = {}) -> Dict:
+    self.mode = select.mode
     self._init_collection_refs(select, options)
     self._init_field_refs(select, options)
     self._init_column_names()
@@ -289,12 +290,23 @@ class SQLFireQuery():
               jdoc[ self.columnNameMap[self.defaultPart][field] ] = self._get_field_value(doc, field)
           docs.append(jdoc)
 
+    # if select distinct mode
+    if self.mode == 'distinct':
+      docs = self.distinct(docs)
+
     aggDocs = self.aggregation(docs)
     self.result = {
       'success': True,
       'message': ''
     }
     return aggDocs
+
+  def distinct(self, documents: Dict) -> List:
+    distinctDocs = {}
+    for doc in documents:
+      # make all document's value combined to be a key
+      distinctDocs[ tuple(doc.values()) ] = doc
+    return list( distinctDocs.values() )
 
   def aggregation(self, documents: Dict) -> List:
     if FireSQLAggregate.hasAggregation(self.aggregationFields):

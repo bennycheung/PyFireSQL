@@ -82,6 +82,15 @@ class SQLTransformer(Transformer):
     return sqlFrom
 
   def select_clause(self, args):
+    return args[0]
+
+  def select_distinct(self, args):
+    return ['distinct', args[0]]
+
+  def select_all(self, args):
+    return ['all', args[0]]
+
+  def select_list(self, args):
     return args
 
   def from_clause(self, args):
@@ -171,7 +180,9 @@ class SQLTransformer(Transformer):
     return args[0]
 
   def select(self, args):
-    sqlSelect = SQL_Select(columns=args[0], froms=args[1], where=args[2])
+    # select all or distinct mode
+    mode, columns = args[0]
+    sqlSelect = SQL_Select(mode=mode, columns=columns, froms=args[1], where=args[2])
     return sqlSelect
   
   # update statement
