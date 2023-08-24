@@ -123,15 +123,18 @@ class SQLFireQuery():
   def _init_column_names(self):
     self.columnNameMap = {}
     colNames = [c.column for c in self.columns]
+    colAliases = [c.alias for c in self.columns]  # new
     for ci in range(len(colNames)):
       tableName = self.aliases[ self.columns[ci].table ] if self.columns[ci].table else self.defaultPart
       if tableName not in self.columnNameMap:
         self.columnNameMap[ tableName ] = {}
-      self.columnNameMap[ tableName ][ colNames[ci] ] = self.columns[ci].column
+      # self.columnNameMap[ tableName ][ colNames[ci] ] = self.columns[ci].column
+      self.columnNameMap[ tableName ][ colNames[ci] ] = colAliases[ci] if colAliases[ci] is not None else self.columns[ci].column # new
       for cj in range(ci+1, len(colNames)):
         if colNames[ci] == colNames[cj]:
           # rename ambiguous column by renaming to table_column
-          self.columnNameMap[ tableName ][ colNames[ci] ] = '_'.join( [self.columns[ci].table, self.columns[ci].column] )
+          # self.columnNameMap[ tableName ][ colNames[ci] ] = '_'.join( [self.columns[ci].table, self.columns[ci].column] )
+          self.columnNameMap[ tableName ][ colNames[ci] ] = '_'.join( [tableName, self.columns[ci].column] )  # new
 
   def firebase_queries(self, allQueries: Dict) -> Dict:
     fireQueries = {}
@@ -250,7 +253,10 @@ class SQLFireQuery():
 
   def _get_join_part(self, documents: Dict, partRef: SQL_SelectFrom, isStar: bool = False):
     part, field = partRef
-    docs = documents[part]
+    try:
+      docs = documents[part]
+    except Exception as e:
+      raise Exception(f"error retrieving documents from collection '{part}'")
     if isStar:
       fields = ['*']
     else:

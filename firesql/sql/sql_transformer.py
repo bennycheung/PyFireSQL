@@ -61,6 +61,7 @@ class SQLTransformer(Transformer):
     return sqlColumn
 
   def select_expression(self, args):
+    if args[1] is not None: args[0].alias = args[1]
     return args[0]
 
   def from_expression(self, args):
