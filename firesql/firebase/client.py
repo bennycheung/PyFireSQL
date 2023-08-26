@@ -13,6 +13,29 @@ import json
 import os
 import importlib
 
+from google.cloud.firestore_v1.collection import CollectionReference
+from google.cloud.firestore_v1.document import DocumentReference
+from google.cloud.firestore_v1.base_document import DocumentSnapshot
+from google.cloud.firestore_v1.types.document import Value
+from google.cloud.firestore_v1.types import (
+    Cursor, 
+    RunQueryResponse
+)
+from google.cloud.firestore_v1.types.query import (
+    StructuredAggregationQuery,
+    StructuredQuery
+)
+from google.cloud.firestore_v1.base_query import FieldFilter
+from google.cloud.firestore_v1 import field_path as field_path_module
+
+Aggregation = StructuredAggregationQuery.Aggregation
+CollectionSelector = StructuredQuery.CollectionSelector
+Count = Aggregation.Count
+FieldPath = field_path_module.FieldPath  # see https://github.com/search?q=FieldPath.documentId%28%29&type=code for examples on using FieldPath
+FieldReference = StructuredQuery.FieldReference
+Filter = StructuredQuery.Filter
+Operator = StructuredQuery.FieldFilter.Operator
+
 
 class FirebaseClient:
   DATETIME_FORMAT = "%Y-%m-%d %H:%M:%SZ"
@@ -107,10 +130,10 @@ class FirebaseClient:
     return collection_ref.document(document_id)
 
 
-  def get_collection_documents(self, collection_ref):
+  def get_collection_documents(self, collection_ref, exclude=[]):
     results = {}
     for doc in collection_ref.stream():
-      results[doc.id] = doc.to_dict()
+      if doc.id not in exclude: results[doc.id] = doc.to_dict()
     return results
 
 
@@ -210,13 +233,16 @@ class FirebaseClient:
               doc = self.get_document(collection_ref, v)
               if doc:
                 results[v] = doc
+        elif operator == '!=':  # new
+          results.update(self.get_collection_documents(collection_ref, exclude=[value]))
         return results
 
     # otherwise, preform the where queries
     query_ref = collection_ref
     for whereTuple in whereTuples:
       (key, operator, value) = whereTuple
-      query_ref = query_ref.where(key, operator, value)
+      # query_ref = query_ref.where(key, operator, value)
+      query_ref = query_ref.where(filter=FieldFilter(key, operator, value)) # new
     for doc in query_ref.stream():
       results[doc.id] = doc.to_dict()
     return results

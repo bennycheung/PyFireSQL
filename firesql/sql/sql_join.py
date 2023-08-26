@@ -60,25 +60,34 @@ class FireSQLJoin():
     # create fast lookup for the right part
     keyLookup = {}
     for docId, doc in lookupPart.docs.items():
-      key = doc[lookupPart.joinField]
+      key = doc[lookupPart.joinField] if lookupPart.joinField != "docid" else docId
       if key not in keyLookup:
         keyLookup[key] = [ (docId, doc) ]
       else:
         keyLookup[key].append( (docId, doc) )
 
     for ldocId, ldoc in loopPart.docs.items():
-      if ldoc[loopPart.joinField] in keyLookup:
+      # if ldoc[loopPart.joinField] in keyLookup:
+      if loopPart.joinField == "docid":
+        joinField_val = ldocId
+        if "docid" not in loopPart.selectFields: loopPart.selectFields = ["docid"] + loopPart.selectFields
+      else:
+        joinField_val = ldoc.get(loopPart.joinField, None)
+      if joinField_val in keyLookup:
         # fast lookup for all right part matched the left doc join field
-        for rdocId, rdoc in keyLookup[ ldoc[loopPart.joinField] ]:
+        # for rdocId, rdoc in keyLookup[ ldoc[loopPart.joinField] ]:
+        for rdocId, rdoc in keyLookup[ joinField_val ]:
           jdoc = {}
           for field in loopPart.selectFields:
             if field == 'docid':
-              jdoc['docid'] = ldocId
+              # jdoc['docid'] = ldocId
+              jdoc[loopPart.nameMap[field]] = ldocId
             else:
               jdoc[ loopPart.nameMap[ field ] ] = self._get_field_value(ldoc, field)
           for field in lookupPart.selectFields:
             if field == 'docid':
-              jdoc['docid'] = rdocId
+              # jdoc['docid'] = rdocId
+              jdoc[lookupPart.nameMap[field]] = rdocId
             else:
               jdoc[ lookupPart.nameMap[ field ] ] = self._get_field_value(rdoc, field)
           docs.append(jdoc)

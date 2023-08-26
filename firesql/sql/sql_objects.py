@@ -51,6 +51,7 @@ class SQL_ColumnRef():
   table: str
   column: str
   func: str
+  alias: str = None
 
 @dataclass
 class SQL_SelectFrom():
